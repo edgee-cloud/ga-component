@@ -32,34 +32,34 @@ This component implements the data collection protocol between [Google Analytics
 - Download the latest version in our [releases page](../../releases). 
 - Place the wasm file in a known place in your server (e.g. `/var/edgee/components`).
 - Update your edgee proxy config:
-  ```toml
-  [[destinations.data_collection]]
-  name = "google analytics"
-  component = "/var/edgee/components/ga.wasm"
-  credentials.amplitude_api_key = "..." 
-  ```
-
-## Contact
-- [Twitter](https://x.com/edgee_cloud)
-- [Slack](https://www.edgee.cloud/slack)
-
+```toml
+[[destinations.data_collection]]
+name = "google analytics"
+component = "/var/edgee/components/ga.wasm"
+credentials.ga_measurement_id = "..."
+```
 
 ## Contributing
 If you're interested in contributing to Edgee, read our [contribution guidelines](./CONTRIBUTING.md)
 
-### Installing Nix
-
-We use Nix to manage our development environment. You can install it using the following command:
-```
-curl --proto '=https' --tlsv1.2 -sSf -L https://install.determinate.systems/nix | sh -s -- install
-```
-
-With Nix installed you can run `nix develop` in this folder and get a shell where all dependencies installed.
-
-### Direnv
-
-Alternatively you can install [direnv](https://direnv.net/docs/installation.html) for a better experience and integration with most IDEs.
-
 ## Reporting Security Vulnerabilities
 If you've found a vulnerability or potential vulnerability in our code, please let us know at
 [edgee-security](mailto:security@edgee.cloud).
+
+## Building from source
+
+To build the wasm file from source, you need to have installed
+- [Rust](https://www.rust-lang.org/tools/install)
+- `wasm32-wasip1` target: run `rustup target add wasm32-wasip1`
+- `wasm-tools`: run `cargo install --locked wasm-tools`
+
+Then you can run the following commands:
+
+```bash
+
+Then you can run the following commands:
+
+```bash
+make install
+make build
+```

@@ -139,16 +139,32 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
     while i < len {
         if i + 2 < len {
             // Check for "ep[", "epn[", "up[", or "upn[" patterns
-            if (chars[i] == 'e' && chars[i + 1] == 'p' && chars[i + 2] == '[') ||
-                (chars[i] == 'e' && chars[i + 1] == 'p' && chars[i + 2] == 'n' && i + 3 < len && chars[i + 3] == '[') ||
-                (chars[i] == 'u' && chars[i + 1] == 'p' && chars[i + 2] == '[') ||
-                (chars[i] == 'u' && chars[i + 1] == 'p' && chars[i + 2] == 'n' && i + 3 < len && chars[i + 3] == '[')
+            if (chars[i] == 'e' && chars[i + 1] == 'p' && chars[i + 2] == '[')
+                || (chars[i] == 'e'
+                    && chars[i + 1] == 'p'
+                    && chars[i + 2] == 'n'
+                    && i + 3 < len
+                    && chars[i + 3] == '[')
+                || (chars[i] == 'u' && chars[i + 1] == 'p' && chars[i + 2] == '[')
+                || (chars[i] == 'u'
+                    && chars[i + 1] == 'p'
+                    && chars[i + 2] == 'n'
+                    && i + 3 < len
+                    && chars[i + 3] == '[')
             {
                 // Append the base part of the key (e.g. "ep", "epn", "up", or "upn")
                 let base = if chars[i] == 'e' {
-                    if chars[i + 2] == 'n' { "epn" } else { "ep" }
+                    if chars[i + 2] == 'n' {
+                        "epn"
+                    } else {
+                        "ep"
+                    }
                 } else {
-                    if chars[i + 2] == 'n' { "upn" } else { "up" }
+                    if chars[i + 2] == 'n' {
+                        "upn"
+                    } else {
+                        "up"
+                    }
                 };
                 cleaned_qs.push_str(base);
                 cleaned_qs.push('.'); // Replace "[" with "."
@@ -177,7 +193,6 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
 
     Ok(cleaned_qs)
 }
-
 
 #[cfg(test)]
 mod tests {

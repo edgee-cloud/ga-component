@@ -131,21 +131,110 @@ fn build_edgee_request(ga_payload: GaPayload) -> anyhow::Result<EdgeeRequest> {
 
 // change every parameters like ep[page_type]=checkout to ep.page_type=checkout. check only the ep, epn, up, upn parameters
 fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
-    // regex, replace ep[page_type]=checkout to ep.page_type=checkout
-    let re = regex::Regex::new(r#"ep\[(\w+)\]"#).unwrap();
-    let ga4_qs = re.replace_all(&ga4_qs, "ep.$1");
+    let mut cleaned_qs = String::new();
+    let mut i = 0;
+    let chars: Vec<char> = ga4_qs.chars().collect();
+    let len = chars.len();
 
-    // regex, replace epn[page_number]=123 to epn.page_number=123
-    let re = regex::Regex::new(r#"epn\[(\w+)\]"#).unwrap();
-    let ga4_qs = re.replace_all(&ga4_qs, "epn.$1");
+    while i < len {
+        if i + 2 < len {
+            // Check for "ep[", "epn[", "up[", or "upn[" patterns
+            if (chars[i] == 'e' && chars[i + 1] == 'p' && chars[i + 2] == '[')
+                || (chars[i] == 'e'
+                    && chars[i + 1] == 'p'
+                    && chars[i + 2] == 'n'
+                    && i + 3 < len
+                    && chars[i + 3] == '[')
+                || (chars[i] == 'u' && chars[i + 1] == 'p' && chars[i + 2] == '[')
+                || (chars[i] == 'u'
+                    && chars[i + 1] == 'p'
+                    && chars[i + 2] == 'n'
+                    && i + 3 < len
+                    && chars[i + 3] == '[')
+            {
+                // Append the base part of the key (e.g. "ep", "epn", "up", or "upn")
+                let base = if chars[i] == 'e' {
+                    if chars[i + 2] == 'n' {
+                        "epn"
+                    } else {
+                        "ep"
+                    }
+                } else {
+                    if chars[i + 2] == 'n' {
+                        "upn"
+                    } else {
+                        "up"
+                    }
+                };
+                cleaned_qs.push_str(base);
+                cleaned_qs.push('.'); // Replace "[" with "."
 
-    // regex, replace up[user_type]=premium to up.user_type=premium
-    let re = regex::Regex::new(r#"up\[(\w+)\]"#).unwrap();
-    let ga4_qs = re.replace_all(&ga4_qs, "up.$1");
+                // Skip the characters that form "ep[" or "epn["
+                if base == "ep" || base == "up" {
+                    i += 3; // Skip "ep[" or "up["
+                } else {
+                    i += 4; // Skip "epn[" or "upn["
+                }
 
-    // regex, replace upn[lifetime_value]=45.50 to upn.lifetime_value=45.50
-    let re = regex::Regex::new(r#"upn\[(\w+)\]"#).unwrap();
-    let ga4_qs = re.replace_all(&ga4_qs, "upn.$1");
+                // Capture the content between brackets and append
+                while i < len && chars[i] != ']' {
+                    cleaned_qs.push(chars[i]);
+                    i += 1;
+                }
+                i += 1; // Skip the closing bracket ']'
+                continue;
+            }
+        }
 
-    Ok(ga4_qs.parse()?)
+        // Add the current character to the output if no special pattern was found
+        cleaned_qs.push(chars[i]);
+        i += 1;
+    }
+
+    Ok(cleaned_qs)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn cleanup_querystring_replaces_correctly() {
+        let input = "ep[page_type]=checkout&epn[page_number]=1&up[user_id]=123&upn[user_age]=30";
+        let expected = "ep.page_type=checkout&epn.page_number=1&up.user_id=123&upn.user_age=30";
+        let result = cleanup_querystring(input).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn cleanup_querystring_handles_empty_string() {
+        let input = "";
+        let expected = "";
+        let result = cleanup_querystring(input).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn cleanup_querystring_handles_no_replacements() {
+        let input = "some_param=value&another_param=value2";
+        let expected = "some_param=value&another_param=value2";
+        let result = cleanup_querystring(input).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn cleanup_querystring_handles_partial_replacements() {
+        let input = "ep[page_type]=checkout&some_param=value";
+        let expected = "ep.page_type=checkout&some_param=value";
+        let result = cleanup_querystring(input).unwrap();
+        assert_eq!(result, expected);
+    }
+
+    #[test]
+    fn cleanup_querystring_handles_multiple_replacements() {
+        let input = "ep[page_type]=checkout&ep[page_name]=home&up[user_id]=123";
+        let expected = "ep.page_type=checkout&ep.page_name=home&up.user_id=123";
+        let result = cleanup_querystring(input).unwrap();
+        assert_eq!(result, expected);
+    }
 }

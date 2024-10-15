@@ -1,4 +1,4 @@
-use exports::provider::{Dict, EdgeeRequest, Guest, Payload};
+use exports::provider::{Dict, EdgeeRequest, Guest, Event, Data};
 use ga_payload::GaPayload;
 use std::collections::HashMap;
 
@@ -10,114 +10,152 @@ export!(GaComponent);
 struct GaComponent;
 
 impl Guest for GaComponent {
-    fn page(edgee_payload: Payload, cred_map: Dict) -> Result<EdgeeRequest, String> {
-        let mut ga_payload = GaPayload::new(&edgee_payload, cred_map, String::from("page_view"))
-            .map_err(|e| e.to_string())?;
-        ga_payload.document_location = edgee_payload.page.url.clone();
-        ga_payload.document_title = edgee_payload.page.title.clone();
-        ga_payload.document_referrer = Some(edgee_payload.page.referrer.clone());
+    fn page(edgee_event: Event, cred_map: Dict) -> Result<EdgeeRequest, String> {
+        if let Data::Page(ref data) = edgee_event.data {
+            let mut ga = GaPayload::new(&edgee_event, cred_map, "page_view".to_string())
+                .map_err(|e| e.to_string())?;
+            ga.document_location = data.url.clone();
+            ga.document_title = data.title.clone();
+            ga.document_referrer = Some(data.referrer.clone());
 
-        let mut event_parameter_string = HashMap::new();
-        let mut event_parameter_number = HashMap::new();
+            let mut event_parameter_string = HashMap::new();
+            let mut event_parameter_number = HashMap::new();
 
-        if !edgee_payload.page.name.is_empty() {
-            event_parameter_string
-                .insert(String::from("page_name"), edgee_payload.page.name.clone());
-        }
-
-        if !edgee_payload.page.category.is_empty() {
-            event_parameter_string.insert(
-                String::from("page_category"),
-                edgee_payload.page.category.clone(),
-            );
-        }
-
-        if !edgee_payload.page.keywords.is_empty() {
-            event_parameter_string.insert(
-                String::from("page_keywords"),
-                edgee_payload.page.keywords.join(","),
-            );
-        }
-
-        if !edgee_payload.page.search.is_empty() {
-            event_parameter_string.insert(
-                String::from("page_search"),
-                edgee_payload.page.search.clone(),
-            );
-        }
-
-        for (key, value) in edgee_payload.page.properties.iter() {
-            let key = key.replace(" ", "_");
-            if let Some(value) = value.parse::<f64>().ok() {
-                event_parameter_number.insert(key, value);
-            } else {
-                event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+            if !data.name.is_empty() {
+                event_parameter_string.insert("page_name".to_string(), data.name.clone());
             }
-        }
 
-        if event_parameter_string.len() > 0 {
-            ga_payload.event_parameter_string = Some(event_parameter_string);
-        }
-        if event_parameter_number.len() > 0 {
-            ga_payload.event_parameter_number = Some(event_parameter_number);
-        }
+            if !data.category.is_empty() {
+                event_parameter_string.insert("page_category".to_string(), data.category.clone());
+            }
 
-        Ok(build_edgee_request(ga_payload).map_err(|e| e.to_string())?)
+            if !data.keywords.is_empty() {
+                event_parameter_string.insert("page_keywords".to_string(), data.keywords.join(","));
+            }
+
+            if !data.search.is_empty() {
+                event_parameter_string.insert("page_search".to_string(), data.search.clone());
+            }
+
+            for (key, value) in data.properties.iter() {
+                let key = key.replace(" ", "_");
+                if let Some(value) = value.parse::<f64>().ok() {
+                    event_parameter_number.insert(key, value);
+                } else {
+                    event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+                }
+            }
+
+            if event_parameter_string.len() > 0 {
+                ga.event_parameter_string = Some(event_parameter_string);
+            }
+            if event_parameter_number.len() > 0 {
+                ga.event_parameter_number = Some(event_parameter_number);
+            }
+
+            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+        } else {
+            Err("Missing page data".to_string())
+        }
     }
 
-    fn track(edgee_payload: Payload, cred_map: Dict) -> Result<EdgeeRequest, String> {
-        if edgee_payload.track.name.is_empty() {
-            return Err("Track is not set".to_string());
-        }
-
-        let mut ga_payload = GaPayload::new(
-            &edgee_payload,
-            cred_map,
-            String::from(edgee_payload.track.name.clone()),
-        )
-        .map_err(|e| e.to_string())?;
-
-        let mut event_parameter_string = HashMap::new();
-        let mut event_parameter_number = HashMap::new();
-
-        for (key, value) in edgee_payload.track.properties.iter() {
-            let key = key.replace(" ", "_");
-            if let Some(value) = value.parse::<f64>().ok() {
-                event_parameter_number.insert(key, value);
-            } else {
-                event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+    fn track(edgee_event: Event, cred_map: Dict) -> Result<EdgeeRequest, String> {
+        if let Data::Track(ref data) = edgee_event.data {
+            if data.name.is_empty() {
+                return Err("Track is not set".to_string());
             }
-        }
 
-        if event_parameter_string.len() > 0 {
-            ga_payload.event_parameter_string = Some(event_parameter_string);
-        }
-        if event_parameter_number.len() > 0 {
-            ga_payload.event_parameter_number = Some(event_parameter_number);
-        }
+            let mut ga = GaPayload::new(
+                &edgee_event,
+                cred_map,
+                String::from(data.name.clone()),
+            )
+                .map_err(|e| e.to_string())?;
 
-        Ok(build_edgee_request(ga_payload).map_err(|e| e.to_string())?)
+            let mut event_parameter_string = HashMap::new();
+            let mut event_parameter_number = HashMap::new();
+
+            for (key, value) in data.properties.iter() {
+                let key = key.replace(" ", "_");
+                if let Some(value) = value.parse::<f64>().ok() {
+                    event_parameter_number.insert(key, value);
+                } else {
+                    event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+                }
+            }
+
+            if event_parameter_string.len() > 0 {
+                ga.event_parameter_string = Some(event_parameter_string);
+            }
+            if event_parameter_number.len() > 0 {
+                ga.event_parameter_number = Some(event_parameter_number);
+            }
+
+            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+        } else {
+            Err("Missing track data".to_string())
+        }
     }
 
-    fn identify(edgee_payload: Payload, cred_map: Dict) -> Result<EdgeeRequest, String> {
-        if edgee_payload.identify.user_id.is_empty()
-            && edgee_payload.identify.anonymous_id.is_empty()
-        {
-            return Err("userId or anonymousId is not set".to_string());
+    fn user(edgee_event: Event, cred_map: Dict) -> Result<EdgeeRequest, String> {
+        if let Data::User(ref data) = edgee_event.data {
+            if data.user_id.is_empty() && data.anonymous_id.is_empty() {
+                return Err("user_id or anonymous_id is not set".to_string());
+            }
+
+            let mut ga = GaPayload::new(&edgee_event, cred_map, "user".to_string())
+                .map_err(|e| e.to_string())?;
+
+
+            // override the user data with the event.data fields
+            let mut user_property_string: HashMap<String, String> = HashMap::new();
+            let mut user_property_number: HashMap<String, f64> = HashMap::new();
+            if !data.anonymous_id.is_empty() {
+                ga.user_id = Some(data.anonymous_id.clone());
+            }
+            if !data.user_id.is_empty() {
+                ga.user_id = Some(data.user_id.clone());
+                if !data.anonymous_id.is_empty() {
+                    user_property_string.insert(
+                        "anonymous_id".to_string(),
+                        data.anonymous_id.clone(),
+                    );
+                }
+            }
+
+            // user properties
+            if !data.properties.is_empty() {
+                for (key, value) in data.properties.clone().iter() {
+                    // if key has a space, replace by a _
+                    let key = key.replace(" ", "_");
+                    if let Some(value) = value.parse::<f64>().ok() {
+                        user_property_number.insert(key, value);
+                    } else {
+                        user_property_string
+                            .insert(key, value.to_string().trim_matches('"').to_string());
+                    }
+                }
+            }
+
+            if user_property_string.len() > 0 {
+                ga.user_property_string = Some(user_property_string);
+            }
+            if user_property_number.len() > 0 {
+                ga.user_property_number = Some(user_property_number);
+            }
+
+            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+        } else {
+            Err("Missing user data".to_string())
         }
-
-        let ga_payload = GaPayload::new(&edgee_payload, cred_map, String::from("identify"))
-            .map_err(|e| e.to_string())?;
-
-        Ok(build_edgee_request(ga_payload).map_err(|e| e.to_string())?)
     }
 }
 
-fn build_edgee_request(ga_payload: GaPayload) -> anyhow::Result<EdgeeRequest> {
+fn build_edgee_request(ga: GaPayload) -> anyhow::Result<EdgeeRequest> {
     let mut headers = vec![];
     headers.push((String::from("content-length"), String::from("0")));
 
-    let querystring = serde_qs::to_string(&ga_payload)?;
+    let querystring = serde_qs::to_string(&ga)?;
 
     let querystring = cleanup_querystring(&querystring)?;
 

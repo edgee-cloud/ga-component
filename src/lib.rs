@@ -1,4 +1,4 @@
-use exports::provider::{Dict, EdgeeRequest, Guest, Event, Data};
+use exports::provider::{Data, Dict, EdgeeRequest, Event, Guest};
 use ga_payload::GaPayload;
 use std::collections::HashMap;
 
@@ -42,7 +42,8 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+                    event_parameter_string
+                        .insert(key, value.to_string().trim_matches('"').to_string());
                 }
             }
 
@@ -65,11 +66,7 @@ impl Guest for GaComponent {
                 return Err("Track is not set".to_string());
             }
 
-            let mut ga = GaPayload::new(
-                &edgee_event,
-                cred_map,
-                String::from(data.name.clone()),
-            )
+            let mut ga = GaPayload::new(&edgee_event, cred_map, String::from(data.name.clone()))
                 .map_err(|e| e.to_string())?;
 
             let mut event_parameter_string = HashMap::new();
@@ -80,7 +77,8 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string.insert(key, value.to_string().trim_matches('"').to_string());
+                    event_parameter_string
+                        .insert(key, value.to_string().trim_matches('"').to_string());
                 }
             }
 
@@ -106,7 +104,6 @@ impl Guest for GaComponent {
             let mut ga = GaPayload::new(&edgee_event, cred_map, "user".to_string())
                 .map_err(|e| e.to_string())?;
 
-
             // override the user data with the event.data fields
             let mut user_property_string: HashMap<String, String> = HashMap::new();
             let mut user_property_number: HashMap<String, f64> = HashMap::new();
@@ -116,10 +113,8 @@ impl Guest for GaComponent {
             if !data.user_id.is_empty() {
                 ga.user_id = Some(data.user_id.clone());
                 if !data.anonymous_id.is_empty() {
-                    user_property_string.insert(
-                        "anonymous_id".to_string(),
-                        data.anonymous_id.clone(),
-                    );
+                    user_property_string
+                        .insert("anonymous_id".to_string(), data.anonymous_id.clone());
                 }
             }
 

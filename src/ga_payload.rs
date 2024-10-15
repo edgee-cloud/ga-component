@@ -283,9 +283,19 @@ impl GaPayload {
         } else {
             ga.user_language = edgee_event.context.client.locale.clone();
         }
-        if !edgee_event.context.client.user_agent_full_version_list.is_empty() {
-            ga.user_agent_full_version_list =
-                Some(edgee_event.context.client.user_agent_full_version_list.clone());
+        if !edgee_event
+            .context
+            .client
+            .user_agent_full_version_list
+            .is_empty()
+        {
+            ga.user_agent_full_version_list = Some(
+                edgee_event
+                    .context
+                    .client
+                    .user_agent_full_version_list
+                    .clone(),
+            );
         }
         if !edgee_event.context.client.user_agent_mobile.is_empty() {
             ga.user_agent_mobile = Some(edgee_event.context.client.user_agent_mobile.clone());
@@ -296,8 +306,14 @@ impl GaPayload {
         if !edgee_event.context.client.os_version.is_empty() {
             ga.user_agent_platform_version = Some(edgee_event.context.client.os_version.clone());
         }
-        if !edgee_event.context.client.user_agent_architecture.is_empty() {
-            ga.user_agent_architecture = Some(edgee_event.context.client.user_agent_architecture.clone());
+        if !edgee_event
+            .context
+            .client
+            .user_agent_architecture
+            .is_empty()
+        {
+            ga.user_agent_architecture =
+                Some(edgee_event.context.client.user_agent_architecture.clone());
         }
         if !edgee_event.context.client.user_agent_bitness.is_empty() {
             ga.user_agent_bitness = Some(edgee_event.context.client.user_agent_bitness.clone());
@@ -377,7 +393,14 @@ impl GaPayload {
 
         // session
         ga.session_id = Some(edgee_event.context.session.session_id.clone());
-        ga.session_count = Some(edgee_event.context.session.session_count.clone().to_string());
+        ga.session_count = Some(
+            edgee_event
+                .context
+                .session
+                .session_count
+                .clone()
+                .to_string(),
+        );
 
         if edgee_event.context.session.first_seen == edgee_event.context.session.last_seen {
             ga.first_visit = Some(String::from("1"));

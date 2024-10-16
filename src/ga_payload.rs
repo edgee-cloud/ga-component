@@ -1,4 +1,4 @@
-use crate::exports::provider::{Dict, Payload};
+use crate::exports::provider::{Dict, Event};
 use anyhow::anyhow;
 use chrono::Utc;
 use num_bigint::{BigInt, ToBigInt};
@@ -197,7 +197,7 @@ pub(crate) struct GaPayload {
     // Session / User Related
     /// Current User Id. Limit 256 characters. Ex: 123456789
     #[serde(rename = "uid", skip_serializing_if = "Option::is_none")]
-    user_id: Option<String>,
+    pub(crate) user_id: Option<String>,
     /// Current Firebase Id. Limit 256 characters. Ex: HASHSAH
     #[serde(rename = "_fid", skip_serializing_if = "Option::is_none")]
     firebase_id: Option<String>,
@@ -212,10 +212,10 @@ pub(crate) struct GaPayload {
     session_engagement: Option<String>,
     /// Defines an user Propery (string) for the current Measurement ID. Ex: up.user_type: premium
     #[serde(rename = "up", skip_serializing_if = "Option::is_none")]
-    user_property_string: Option<HashMap<String, String>>,
+    pub(crate) user_property_string: Option<HashMap<String, String>>,
     /// Defines an user Propery (number) for the current Measurement ID. Ex: upn.lifetime_value: 45.50
     #[serde(rename = "upn", skip_serializing_if = "Option::is_none")]
-    user_property_number: Option<HashMap<String, f64>>,
+    pub(crate) user_property_number: Option<HashMap<String, f64>>,
     /// If the "_ga_XXX" cookie is not set, the first event will have this value present. This will internally create a new "first_visit" event on GA4. If this event is also a conversion the value will be "2" if not, will be "1". Ex: 1
     #[serde(rename = "_fv", skip_serializing_if = "Option::is_none")]
     first_visit: Option<String>,
@@ -245,7 +245,7 @@ pub(crate) struct GaPayload {
 
 impl GaPayload {
     pub(crate) fn new(
-        edgee_payload: &Payload,
+        edgee_event: &Event,
         cred_map: Dict,
         event_name: String,
     ) -> anyhow::Result<Self> {
@@ -270,71 +270,87 @@ impl GaPayload {
         ga.external_event = Some("1".to_string());
 
         // forge the typical ga ClientId
-        let first_seen = edgee_payload.session.first_seen.clone();
+        let first_seen = edgee_event.context.session.first_seen.clone();
 
         // todo : ID continuity
-        let ga_user_id = uuid_to_nine_digit_string(&edgee_payload.identify.edgee_id)?;
+        let ga_user_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
         ga.client_id = format!("{}.{}", ga_user_id, first_seen);
 
         ga.hit_counter = "1".to_string();
 
-        if edgee_payload.client.locale.is_empty() {
+        if edgee_event.context.client.locale.is_empty() {
             ga.user_language = "en".to_string();
         } else {
-            ga.user_language = edgee_payload.client.locale.clone();
+            ga.user_language = edgee_event.context.client.locale.clone();
         }
-        if !edgee_payload.client.user_agent_full_version_list.is_empty() {
-            ga.user_agent_full_version_list =
-                Some(edgee_payload.client.user_agent_full_version_list.clone());
+        if !edgee_event
+            .context
+            .client
+            .user_agent_full_version_list
+            .is_empty()
+        {
+            ga.user_agent_full_version_list = Some(
+                edgee_event
+                    .context
+                    .client
+                    .user_agent_full_version_list
+                    .clone(),
+            );
         }
-        if !edgee_payload.client.user_agent_mobile.is_empty() {
-            ga.user_agent_mobile = Some(edgee_payload.client.user_agent_mobile.clone());
+        if !edgee_event.context.client.user_agent_mobile.is_empty() {
+            ga.user_agent_mobile = Some(edgee_event.context.client.user_agent_mobile.clone());
         }
-        if !edgee_payload.client.os_name.is_empty() {
-            ga.user_agent_platform = Some(edgee_payload.client.os_name.clone());
+        if !edgee_event.context.client.os_name.is_empty() {
+            ga.user_agent_platform = Some(edgee_event.context.client.os_name.clone());
         }
-        if !edgee_payload.client.os_version.is_empty() {
-            ga.user_agent_platform_version = Some(edgee_payload.client.os_version.clone());
+        if !edgee_event.context.client.os_version.is_empty() {
+            ga.user_agent_platform_version = Some(edgee_event.context.client.os_version.clone());
         }
-        if !edgee_payload.client.user_agent_architecture.is_empty() {
-            ga.user_agent_architecture = Some(edgee_payload.client.user_agent_architecture.clone());
+        if !edgee_event
+            .context
+            .client
+            .user_agent_architecture
+            .is_empty()
+        {
+            ga.user_agent_architecture =
+                Some(edgee_event.context.client.user_agent_architecture.clone());
         }
-        if !edgee_payload.client.user_agent_bitness.is_empty() {
-            ga.user_agent_bitness = Some(edgee_payload.client.user_agent_bitness.clone());
+        if !edgee_event.context.client.user_agent_bitness.is_empty() {
+            ga.user_agent_bitness = Some(edgee_event.context.client.user_agent_bitness.clone());
         }
-        if !edgee_payload.client.user_agent_model.is_empty() {
-            ga.user_agent_model = Some(edgee_payload.client.user_agent_model.clone());
+        if !edgee_event.context.client.user_agent_model.is_empty() {
+            ga.user_agent_model = Some(edgee_event.context.client.user_agent_model.clone());
         }
 
-        if edgee_payload.client.screen_width.is_positive()
-            && edgee_payload.client.screen_height.is_positive()
+        if edgee_event.context.client.screen_width.is_positive()
+            && edgee_event.context.client.screen_height.is_positive()
         {
             ga.screen_resolution = Some(format!(
                 "{:?}x{:?}",
-                edgee_payload.client.screen_width.clone(),
-                edgee_payload.client.screen_height.clone()
+                edgee_event.context.client.screen_width.clone(),
+                edgee_event.context.client.screen_height.clone()
             ));
         }
 
         // user
         let mut user_property_string: HashMap<String, String> = HashMap::new();
         let mut user_property_number: HashMap<String, f64> = HashMap::new();
-        if !edgee_payload.identify.anonymous_id.is_empty() {
-            ga.user_id = Some(edgee_payload.identify.anonymous_id.clone());
+        if !edgee_event.context.user.anonymous_id.is_empty() {
+            ga.user_id = Some(edgee_event.context.user.anonymous_id.clone());
         }
-        if !edgee_payload.identify.user_id.is_empty() {
-            ga.user_id = Some(edgee_payload.identify.user_id.clone());
-            if !edgee_payload.identify.anonymous_id.is_empty() {
+        if !edgee_event.context.user.user_id.is_empty() {
+            ga.user_id = Some(edgee_event.context.user.user_id.clone());
+            if !edgee_event.context.user.anonymous_id.is_empty() {
                 user_property_string.insert(
                     "anonymous_id".to_string(),
-                    edgee_payload.identify.anonymous_id.clone(),
+                    edgee_event.context.user.anonymous_id.clone(),
                 );
             }
         }
 
         // user properties
-        if !edgee_payload.identify.properties.is_empty() {
-            for (key, value) in edgee_payload.identify.properties.clone().iter() {
+        if !edgee_event.context.user.properties.is_empty() {
+            for (key, value) in edgee_event.context.user.properties.clone().iter() {
                 // if key has a space, replace by a _
                 let key = key.replace(" ", "_");
                 if let Some(value) = value.parse::<f64>().ok() {
@@ -354,38 +370,45 @@ impl GaPayload {
         }
 
         // geo ip
-        if !edgee_payload.client.country_code.is_empty() {
-            ga.user_country = Some(edgee_payload.client.country_code.clone());
+        if !edgee_event.context.client.country_code.is_empty() {
+            ga.user_country = Some(edgee_event.context.client.country_code.clone());
         }
 
         // campaign
-        if !edgee_payload.campaign.medium.is_empty() {
-            ga.campaign_medium = Some(edgee_payload.campaign.medium.clone());
+        if !edgee_event.context.campaign.medium.is_empty() {
+            ga.campaign_medium = Some(edgee_event.context.campaign.medium.clone());
         }
-        if !edgee_payload.campaign.source.is_empty() {
-            ga.campaign_source = Some(edgee_payload.campaign.source.clone());
+        if !edgee_event.context.campaign.source.is_empty() {
+            ga.campaign_source = Some(edgee_event.context.campaign.source.clone());
         }
-        if !edgee_payload.campaign.name.is_empty() {
-            ga.campaign_name = Some(edgee_payload.campaign.name.clone());
+        if !edgee_event.context.campaign.name.is_empty() {
+            ga.campaign_name = Some(edgee_event.context.campaign.name.clone());
         }
-        if !edgee_payload.campaign.content.is_empty() {
-            ga.campaign_content = Some(edgee_payload.campaign.content.clone());
+        if !edgee_event.context.campaign.content.is_empty() {
+            ga.campaign_content = Some(edgee_event.context.campaign.content.clone());
         }
-        if !edgee_payload.campaign.term.is_empty() {
-            ga.campaign_term = Some(edgee_payload.campaign.term.clone());
+        if !edgee_event.context.campaign.term.is_empty() {
+            ga.campaign_term = Some(edgee_event.context.campaign.term.clone());
         }
 
         // session
-        ga.session_id = Some(edgee_payload.session.session_id.clone());
-        ga.session_count = Some(edgee_payload.session.session_count.clone().to_string());
+        ga.session_id = Some(edgee_event.context.session.session_id.clone());
+        ga.session_count = Some(
+            edgee_event
+                .context
+                .session
+                .session_count
+                .clone()
+                .to_string(),
+        );
 
-        if edgee_payload.session.first_seen == edgee_payload.session.last_seen {
+        if edgee_event.context.session.first_seen == edgee_event.context.session.last_seen {
             ga.first_visit = Some(String::from("1"));
             ga.new_session_id = Some(String::from("1"));
         }
 
         // when a new session starts, ga4.SessionEngagement = 0, when it doesn't ga4.SessionEngagement = 1
-        if edgee_payload.session.session_start {
+        if edgee_event.context.session.session_start {
             ga.session_start = Some(String::from("1"));
             ga.session_engagement = Some(String::from("0"));
         } else {

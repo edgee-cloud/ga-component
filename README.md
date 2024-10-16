@@ -23,9 +23,9 @@ This component implements the data collection protocol between [Google Analytics
 
 ### Protocol coverage
 
-| Page View | Track | Identify |
-| -------- | ------- | ------- |
-|  ✅ | ✅ | ✅ |
+| Page | Track | User |
+|------|-------|------|
+| ✅   | ✅    | ✅    |
 
 ## Usage
 

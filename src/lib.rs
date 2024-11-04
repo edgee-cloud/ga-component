@@ -42,8 +42,7 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string
-                        .insert(key, value.clone());
+                    event_parameter_string.insert(key, value.clone());
                 }
             }
 
@@ -77,8 +76,7 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string
-                        .insert(key, value.clone());
+                    event_parameter_string.insert(key, value.clone());
                 }
             }
 
@@ -126,8 +124,7 @@ impl Guest for GaComponent {
                     if let Some(value) = value.parse::<f64>().ok() {
                         user_property_number.insert(key, value);
                     } else {
-                        user_property_string
-                            .insert(key, value.clone());
+                        user_property_string.insert(key, value.clone());
                     }
                 }
             }

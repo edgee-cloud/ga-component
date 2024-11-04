@@ -43,7 +43,7 @@ impl Guest for GaComponent {
                     event_parameter_number.insert(key, value);
                 } else {
                     event_parameter_string
-                        .insert(key, value.to_string().trim_matches('"').to_string());
+                        .insert(key, value.clone());
                 }
             }
 
@@ -78,7 +78,7 @@ impl Guest for GaComponent {
                     event_parameter_number.insert(key, value);
                 } else {
                     event_parameter_string
-                        .insert(key, value.to_string().trim_matches('"').to_string());
+                        .insert(key, value.clone());
                 }
             }
 
@@ -127,7 +127,7 @@ impl Guest for GaComponent {
                         user_property_number.insert(key, value);
                     } else {
                         user_property_string
-                            .insert(key, value.to_string().trim_matches('"').to_string());
+                            .insert(key, value.clone());
                     }
                 }
             }

@@ -356,8 +356,7 @@ impl GaPayload {
                 if let Some(value) = value.parse::<f64>().ok() {
                     user_property_number.insert(key, value);
                 } else {
-                    user_property_string
-                        .insert(key, value.to_string().trim_matches('"').to_string());
+                    user_property_string.insert(key, value.clone());
                 }
             }
         }

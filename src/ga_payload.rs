@@ -307,8 +307,7 @@ impl GaPayload {
 
         let mut ga = Self::default();
 
-        // todo missing ga4.GTMHashInfo from the cred_map?
-        // ga.gmt_hash_info = Some("xxxx".to_string());
+        // todo missing ga4.GTMHashInfo
         ga.protocol_version = "2".to_string();
         ga.tracking_id = measurement_id;
         ga.event_name = event_name;

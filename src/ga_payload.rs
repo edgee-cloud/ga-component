@@ -283,7 +283,6 @@ pub(crate) struct GaPayload {
     /// Timestamp measuring the difference between the moment this parameter gets populated and the moment the navigation started on that particular page. Calculated in JS with Math.round(window.performance.now())
     #[serde(skip_serializing_if = "Option::is_none")]
     tfd: Option<String>,
-
     // E-Commerce Main parameters are missing for now
     // Uncategorized / Missing Info parameters are missing for now
 }
@@ -319,7 +318,11 @@ impl GaPayload {
             ga.document_title = edgee_event.context.page.title.clone();
         }
         if !edgee_event.context.page.url.is_empty() {
-            let document_location = format!("{}{}", edgee_event.context.page.url.clone(), edgee_event.context.page.search.clone());
+            let document_location = format!(
+                "{}{}",
+                edgee_event.context.page.url.clone(),
+                edgee_event.context.page.search.clone()
+            );
             ga.document_location = document_location;
         }
         if !edgee_event.context.page.referrer.is_empty() {

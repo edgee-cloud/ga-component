@@ -131,23 +131,12 @@ pub(crate) struct GaPayload {
     /// Traffic Type. Ex: 1
     #[serde(rename = "tt", skip_serializing_if = "Option::is_none")]
     traffic_type: Option<String>,
-    /// Current Google Consent Status. Format 'G1'+'AdsStorageBoolStatus'`+'AnalyticsStorageBoolStatus'. Ex: G101.
-    #[serde(rename = "gcs", skip_serializing_if = "Option::is_none")]
-    google_consent_status: Option<String>,
-    /// Will be added with the value "1" if the Google Consent has just been updated (wait_for_update setting on GTAG). Ex: 1
-    #[serde(rename = "gcu", skip_serializing_if = "Option::is_none")]
-    google_consent_update: Option<String>,
-    /// Documented values, 1 or 2, no more info on the meaning. Ex: 1
-    #[serde(rename = "gcut", skip_serializing_if = "Option::is_none")]
-    google_consent_update_type: Option<String>,
-    /// Will be added with the value "1" if the Google Consent had a default value before getting an update. Ex: 1
-    #[serde(rename = "gcd", skip_serializing_if = "Option::is_none")]
-    google_consent_default: Option<String>,
     /// Will be set to 1 is the current page has a linker and this last one is valid. Ex: 1
     #[serde(rename = "_glv", skip_serializing_if = "Option::is_none")]
     is_google_linker_valid: Option<String>,
 
-    // Campaign Attribution
+    // Campaign Attribution are directly grabbed from the URL
+    // Those parameters will override the current values read from the URL, so they are clearly optional
     /// Campaign Medium ( utm_medium ), this will override the current values read from the url. Ex: cpc
     #[serde(rename = "cm", skip_serializing_if = "Option::is_none")]
     campaign_medium: Option<String>,
@@ -234,13 +223,69 @@ pub(crate) struct GaPayload {
     /// Added to report the current country for the user under some circumstanced. To be documented. Ex: US
     #[serde(rename = "_uc", skip_serializing_if = "Option::is_none")]
     user_country: Option<String>,
+
+    // Google Consent mode V1
+    /// Current Google Consent Status. Format 'G1'+'AdsStorageBoolStatus'`+'AnalyticsStorageBoolStatus'. Ex: G101.
+    #[serde(rename = "gcs", skip_serializing_if = "Option::is_none")]
+    google_consent_status: Option<String>,
+    /// Will be added with the value "1" if the Google Consent has just been updated (wait_for_update setting on GTAG). Ex: 1
+    #[serde(rename = "gcu", skip_serializing_if = "Option::is_none")]
+    google_consent_update: Option<String>,
+    /// Documented values, 1 or 2, no more info on the meaning. Ex: 1
+    #[serde(rename = "gcut", skip_serializing_if = "Option::is_none")]
+    google_consent_update_type: Option<String>,
+
+    // Google Consent mode V2
+    /// Google Consent Decoded.
+    /// format xx{{ad_storage}}x{{analytics_storage}}x{{ad_user_data}}x{{ad_personalization}}xxx
+    /// The {{consent signals}} values can be as follows:
+    ///
+    /// "p": value ‘denied’ by ‘default’ (the user has not yet made a choice)
+    /// "t": ‘granted’ value by ‘default’ (the user has not yet made a choice)
+    /// "q", ‘m’ or ‘u’: ‘denied’ value on update (user choice)
+    /// "e", ‘r’, ‘n’ or ‘v’: value ‘granted’ during an update (user choice)
+    /// "l": the signal has not been defined (this is the case if GCM v2 is not in place).
+    ///
+    /// ex: 13p3t3p2p5l1 (denied to all, but granted to analytics)
+    /// 13t3t3t2t5l1 (granted to all)
+    #[serde(rename = "gcd", skip_serializing_if = "Option::is_none")]
+    gcd: Option<String>,
+    /// Non personalized ads (0 or 1)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    npa: Option<String>,
+    /// Consent to Google services is encoded using dma_cps: - (no consent), syphamo (s for Search, y for Youtube, p for Play, h for Shopping, a for Ad services, m for Maps, o for Other)
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dma_cps: Option<String>,
+    /// Documented values, 1 or 2, no more info on the meaning. Ex: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    dma: Option<String>,
+    /// Privacy Sandbox Cookie Deprecation Label. Ex: noapi or denied
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pscdl: Option<String>,
+
+    // Miscellaneous
+    /// Tag Explorer. Ex: 101823848~101925629
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tag_exp: Option<String>,
+    /// Documented values, 0 or 1, no more info on the meaning. Ex: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    are: Option<String>,
+    /// Documented values, 0 or 1, no more info on the meaning. Ex: 1
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pae: Option<String>,
+    /// Documented values, 0 or 1, no more info on the meaning. Ex: 0
+    #[serde(skip_serializing_if = "Option::is_none")]
+    frm: Option<String>,
+
+    #[serde(skip_serializing_if = "Option::is_none")]
+    ec_mode: Option<String>, // ex: c
+
+    /// Timestamp measuring the difference between the moment this parameter gets populated and the moment the navigation started on that particular page. Calculated in JS with Math.round(window.performance.now())
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tfd: Option<String>,
+
     // E-Commerce Main parameters are missing for now
     // Uncategorized / Missing Info parameters are missing for now
-    // Custom Parameters, not used for ga4
-
-    // Extra fields to hold HTTP headers not typically part of the JSON payload
-    // x_forwarded_for: String,
-    // user_agent: String,
 }
 
 impl GaPayload {
@@ -262,12 +307,33 @@ impl GaPayload {
 
         let mut ga = Self::default();
 
-        // todo missing ga4.GTMHashInfo
+        // todo missing ga4.GTMHashInfo from the cred_map?
+        // ga.gmt_hash_info = Some("xxxx".to_string());
         ga.protocol_version = "2".to_string();
         ga.tracking_id = measurement_id;
         ga.event_name = event_name;
         ga.random_page_load_hash = random_page_load_hash();
         ga.external_event = Some("1".to_string());
+
+        // page
+        if !edgee_event.context.page.title.is_empty() {
+            ga.document_title = edgee_event.context.page.title.clone();
+        }
+        if !edgee_event.context.page.url.is_empty() {
+            let document_location = format!("{}{}", edgee_event.context.page.url.clone(), edgee_event.context.page.search.clone());
+            ga.document_location = document_location;
+        }
+        if !edgee_event.context.page.referrer.is_empty() {
+            ga.document_referrer = Some(edgee_event.context.page.referrer.clone());
+        }
+
+        // Consent is set to analytics only
+        ga.google_consent_status = Some("G101".to_string());
+        ga.gcd = Some("13p3t3p2p5l1".to_string());
+        ga.npa = Some("1".to_string());
+        ga.dma_cps = Some("-".to_string());
+        ga.dma = Some("1".to_string());
+        ga.pscdl = Some("denied".to_string());
 
         // forge the typical ga ClientId
         let first_seen = edgee_event.context.session.first_seen.clone();
@@ -373,22 +439,38 @@ impl GaPayload {
             ga.user_country = Some(edgee_event.context.client.country_code.clone());
         }
 
-        // campaign
-        if !edgee_event.context.campaign.medium.is_empty() {
-            ga.campaign_medium = Some(edgee_event.context.campaign.medium.clone());
-        }
-        if !edgee_event.context.campaign.source.is_empty() {
-            ga.campaign_source = Some(edgee_event.context.campaign.source.clone());
-        }
-        if !edgee_event.context.campaign.name.is_empty() {
-            ga.campaign_name = Some(edgee_event.context.campaign.name.clone());
-        }
-        if !edgee_event.context.campaign.content.is_empty() {
-            ga.campaign_content = Some(edgee_event.context.campaign.content.clone());
-        }
-        if !edgee_event.context.campaign.term.is_empty() {
-            ga.campaign_term = Some(edgee_event.context.campaign.term.clone());
-        }
+        // Campaign are directly grabbed by GA from the URL
+        // There's no need to set them here
+        // if !edgee_event.context.campaign.medium.is_empty() {
+        //     ga.campaign_medium = Some(edgee_event.context.campaign.medium.clone());
+        // }
+        // if !edgee_event.context.campaign.source.is_empty() {
+        //     ga.campaign_source = Some(edgee_event.context.campaign.source.clone());
+        // }
+        // if !edgee_event.context.campaign.name.is_empty() {
+        //     ga.campaign_name = Some(edgee_event.context.campaign.name.clone());
+        // }
+        // if !edgee_event.context.campaign.content.is_empty() {
+        //     ga.campaign_content = Some(edgee_event.context.campaign.content.clone());
+        // }
+        // if !edgee_event.context.campaign.term.is_empty() {
+        //     ga.campaign_term = Some(edgee_event.context.campaign.term.clone());
+        // }
+        // if !edgee_event.context.page.search.is_empty() {
+        //     // analyze search string
+        //     let qs = serde_qs::from_str(edgee_event.context.page.search.as_str());
+        //     if qs.is_ok() {
+        //         let qs_map: HashMap<String, String> = qs.unwrap();
+        //         for (key, value) in qs_map.iter() {
+        //             if key.eq("utm_creative_format") {
+        //                 ga.campaign_creative_format = Some(value.clone());
+        //             }
+        //             if key.eq("utm_marketing_tactic") {
+        //                 ga.campaign_marketing_tactic = Some(value.clone());
+        //             }
+        //         }
+        //     }
+        // }
 
         // session
         ga.session_id = Some(edgee_event.context.session.session_id.clone());

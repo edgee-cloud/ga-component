@@ -21,6 +21,8 @@ impl Guest for GaComponent {
             ga.document_referrer = Some(data.referrer.clone());
 
             let mut event_parameter_string = HashMap::new();
+            event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());
+
             let mut event_parameter_number = HashMap::new();
 
             if !data.name.is_empty() {
@@ -48,9 +50,7 @@ impl Guest for GaComponent {
                 }
             }
 
-            if event_parameter_string.len() > 0 {
-                ga.event_parameter_string = Some(event_parameter_string);
-            }
+            ga.event_parameter_string = Some(event_parameter_string);
             if event_parameter_number.len() > 0 {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
@@ -71,6 +71,8 @@ impl Guest for GaComponent {
                 .map_err(|e| e.to_string())?;
 
             let mut event_parameter_string = HashMap::new();
+            event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());
+
             let mut event_parameter_number = HashMap::new();
 
             for (key, value) in data.properties.iter() {
@@ -82,9 +84,7 @@ impl Guest for GaComponent {
                 }
             }
 
-            if event_parameter_string.len() > 0 {
-                ga.event_parameter_string = Some(event_parameter_string);
-            }
+            ga.event_parameter_string = Some(event_parameter_string);
             if event_parameter_number.len() > 0 {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
@@ -103,6 +103,10 @@ impl Guest for GaComponent {
 
             let mut ga = GaPayload::new(&edgee_event, cred_map, "user".to_string())
                 .map_err(|e| e.to_string())?;
+
+            let mut event_parameter_string = HashMap::new();
+            event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());
+            ga.event_parameter_string = Some(event_parameter_string);
 
             // override the user data with the event.data fields
             let mut user_property_string: HashMap<String, String> = HashMap::new();

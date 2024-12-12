@@ -1,4 +1,4 @@
-package edgee:protocols@0.2.2;
+package edgee:protocols@0.2.3;
 
 world data-collection {
     export provider: interface {
@@ -44,6 +44,7 @@ world data-collection {
         record track-data {
             name: string,
             properties: dict,
+            products: list<dict>,
         }
 
         record context {

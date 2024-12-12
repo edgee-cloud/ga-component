@@ -14,6 +14,7 @@ world data-collection {
             event-type: event-type,
             data: data,
             context: context,
+            consent: string,
         }
 
         variant data {

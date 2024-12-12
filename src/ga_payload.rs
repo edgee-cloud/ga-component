@@ -43,40 +43,6 @@ pub(crate) struct GaPayload {
     #[serde(rename = "richsstsse", skip_serializing_if = "Option::is_none")]
     richsstsse: Option<String>,
 
-    // items parameters (An event can only hold up to 200 items details. Any items above that limit will be removed from the payload)
-    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
-    item_id: Option<String>, // 12345
-    #[serde(rename = "br", skip_serializing_if = "Option::is_none")]
-    item_brand: Option<String>, // Google
-    #[serde(rename = "ca", skip_serializing_if = "Option::is_none")]
-    item_category_hierarchy1: Option<String>, // Electronics
-    #[serde(rename = "ca2", skip_serializing_if = "Option::is_none")]
-    item_category_hierarchy2: Option<String>, // Accessories
-    #[serde(rename = "ca3", skip_serializing_if = "Option::is_none")]
-    item_category_hierarchy3: Option<String>, // Cables
-    #[serde(rename = "ca4", skip_serializing_if = "Option::is_none")]
-    item_category_hierarchy4: Option<String>, // HDMI
-    #[serde(rename = "ca5", skip_serializing_if = "Option::is_none")]
-    item_category_hierarchy5: Option<String>, // HDMI
-    #[serde(rename = "pr", skip_serializing_if = "Option::is_none")]
-    item_price: Option<String>, // 19.99
-    #[serde(rename = "qt", skip_serializing_if = "Option::is_none")]
-    item_quantity: Option<String>, // 1
-    #[serde(rename = "va", skip_serializing_if = "Option::is_none")]
-    item_variant: Option<String>, // 8ft
-    #[serde(rename = "cp", skip_serializing_if = "Option::is_none")]
-    item_coupon: Option<String>, // SUMMER2019
-    #[serde(rename = "ds", skip_serializing_if = "Option::is_none")]
-    item_discount: Option<String>, // 5.00
-    #[serde(rename = "ln", skip_serializing_if = "Option::is_none")]
-    item_list_name: Option<String>, // Search Results
-    #[serde(rename = "li", skip_serializing_if = "Option::is_none")]
-    item_list_id: Option<String>, // SR123
-    #[serde(rename = "lp", skip_serializing_if = "Option::is_none")]
-    item_list_position: Option<String>, // 1
-    #[serde(rename = "af", skip_serializing_if = "Option::is_none")]
-    item_affiliation: Option<String>, // Google Store
-
     // Client hints
     /// User Agent Architecture. ex: arm
     #[serde(rename = "uaa", skip_serializing_if = "Option::is_none")]
@@ -169,13 +135,22 @@ pub(crate) struct GaPayload {
     /// It's the total engagement time in milliseconds since the last event. The engagement time is measured only when the current page is visible and active ( ie: the browser window/tab must be active and visible ), for this GA4 uses the window.events: focus, blur, pageshow, pagehide and the document:visibilitychange, these will determine when the timer starts and pauses. Ex: 1234
     #[serde(rename = "_et", skip_serializing_if = "Option::is_none")]
     engagement_time: Option<String>,
+
     // Dynamic parameter handling is more complex in Rust and might require a custom deserializer
     /// Defines a parameter for the current Event with ep.* semantic. Ex: ep.page_type: checkout
+    /// For ecommerce, the following parameters are used:
+    /// - &ep.affiliation
     #[serde(rename = "ep", skip_serializing_if = "Option::is_none")]
     pub event_parameter_string: Option<HashMap<String, String>>,
+
     /// Defines a parameter for the current Event with epn.* semantic. Ex: epn.page_number: 123
+    /// For ecommerce, the following parameters are used:
+    /// - Transaction revenue: &epn.value
+    /// - Transaction tax: &epn.tax
+    /// - Transaction shipping: &epn.shipping
     #[serde(rename = "epn", skip_serializing_if = "Option::is_none")]
     pub event_parameter_number: Option<HashMap<String, f64>>,
+
     /// If the current event is set as a conversion on the admin interace the evfent will have this value present. Ex: 1
     #[serde(rename = "_c", skip_serializing_if = "Option::is_none")]
     is_conversion: Option<String>,
@@ -283,8 +258,64 @@ pub(crate) struct GaPayload {
     /// Timestamp measuring the difference between the moment this parameter gets populated and the moment the navigation started on that particular page. Calculated in JS with Math.round(window.performance.now())
     #[serde(skip_serializing_if = "Option::is_none")]
     tfd: Option<String>,
-    // E-Commerce Main parameters are missing for now
-    // Uncategorized / Missing Info parameters are missing for now
+
+    /// Ecommerce
+    /// Currency Code. ISO 4217
+    #[serde(rename = "cu", skip_serializing_if = "Option::is_none")]
+    pub currency_code: Option<String>,
+}
+
+/// Product (item). Converted into a GA4 string, it contains an item details and all it's params.
+/// Example Value	&pr1=id123456~nmTshirtbrThyngster~camen~c2shirts~pr129.99~k0currency~v0JPY~k1stock~v1yes
+#[derive(Serialize, Debug, Default)]
+pub struct Product {
+    // items parameters (An event can only hold up to 200 items details. Any items above that limit will be removed from the payload)
+    #[serde(rename = "id", skip_serializing_if = "Option::is_none")]
+    pub sku: Option<String>, // 12345
+    #[serde(rename = "nm", skip_serializing_if = "Option::is_none")]
+    pub name: Option<String>, // Tshirt
+    #[serde(rename = "af", skip_serializing_if = "Option::is_none")]
+    pub affiliation: Option<String>, // Google Store
+    #[serde(rename = "cp", skip_serializing_if = "Option::is_none")]
+    pub coupon: Option<String>, // SUMMER2019
+    #[serde(rename = "ds", skip_serializing_if = "Option::is_none")]
+    pub discount: Option<String>, // 5.00
+    #[serde(rename = "lp", skip_serializing_if = "Option::is_none")]
+    pub index: Option<String>, // 0
+
+    #[serde(rename = "br", skip_serializing_if = "Option::is_none")]
+    pub brand: Option<String>, // Google
+    #[serde(rename = "ca", skip_serializing_if = "Option::is_none")]
+    pub category: Option<String>, // Electronics
+    #[serde(rename = "c2", skip_serializing_if = "Option::is_none")]
+    pub category2: Option<String>, // Accessories
+    #[serde(rename = "c3", skip_serializing_if = "Option::is_none")]
+    pub category3: Option<String>, // Cables
+    #[serde(rename = "c4", skip_serializing_if = "Option::is_none")]
+    pub category4: Option<String>, // HDMI
+    #[serde(rename = "c5", skip_serializing_if = "Option::is_none")]
+    pub category5: Option<String>, // HDMI
+    #[serde(rename = "li", skip_serializing_if = "Option::is_none")]
+    pub list_id: Option<String>, // SR123
+    #[serde(rename = "ln", skip_serializing_if = "Option::is_none")]
+    pub list_name: Option<String>, // Search Results
+    #[serde(rename = "va", skip_serializing_if = "Option::is_none")]
+    pub variant: Option<String>, // 8ft
+
+    #[serde(rename = "lo", skip_serializing_if = "Option::is_none")]
+    pub location_id: Option<String>, // ChIJIQBpAG2ahYAR_6128GcTUEo
+
+    #[serde(rename = "pr", skip_serializing_if = "Option::is_none")]
+    pub price: Option<String>, // 19.99
+    #[serde(rename = "qt", skip_serializing_if = "Option::is_none")]
+    pub quantity: Option<String>, // 1
+
+    // custom parameters
+    // each parameter is a key/value pair
+    // ex: in_stock: true, color: green
+    // will be converted into a k0in_stock~v0true~k1color~v1green
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub custom_parameters: Option<Vec<(String, String)>>,
 }
 
 impl GaPayload {

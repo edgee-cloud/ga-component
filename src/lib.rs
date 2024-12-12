@@ -1,5 +1,5 @@
 use exports::provider::{Data, Dict, EdgeeRequest, Event, Guest};
-use ga_payload::GaPayload;
+use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 
 mod ga_payload;
@@ -46,7 +46,11 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string.insert(key, value.clone());
+                    if key == "currency" {
+                        ga.currency_code = Some(value.clone());
+                    } else {
+                        event_parameter_string.insert(key, value.clone());
+                    }
                 }
             }
 
@@ -55,7 +59,7 @@ impl Guest for GaComponent {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
 
-            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+            Ok(build_edgee_request(ga, vec![]).map_err(|e| e.to_string())?)
         } else {
             Err("Missing page data".to_string())
         }
@@ -80,7 +84,11 @@ impl Guest for GaComponent {
                 if let Some(value) = value.parse::<f64>().ok() {
                     event_parameter_number.insert(key, value);
                 } else {
-                    event_parameter_string.insert(key, value.clone());
+                    if key == "currency" {
+                        ga.currency_code = Some(value.clone());
+                    } else {
+                        event_parameter_string.insert(key, value.clone());
+                    }
                 }
             }
 
@@ -89,7 +97,46 @@ impl Guest for GaComponent {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
 
-            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+            let ga_items: Vec<Product> = data
+                .products
+                .iter()
+                .map(|product| {
+                    let mut p = Product::default();
+                    let mut p_custom_params = Vec::new();
+
+                    for (key, value) in product.iter() {
+                        let key = key.replace(" ", "_");
+                        match key.as_str() {
+                            "sku" => p.sku = Some(value.clone()),
+                            "name" => p.name = Some(value.clone()),
+                            "affiliation" => p.affiliation = Some(value.clone()),
+                            "coupon" => p.coupon = Some(value.clone()),
+                            "discount" => p.discount = Some(value.clone()),
+                            "index" => p.index = Some(value.clone()),
+                            "brand" => p.brand = Some(value.clone()),
+                            "category" => p.category = Some(value.clone()),
+                            "category2" => p.category2 = Some(value.clone()),
+                            "category3" => p.category3 = Some(value.clone()),
+                            "category4" => p.category4 = Some(value.clone()),
+                            "category5" => p.category5 = Some(value.clone()),
+                            "list_id" => p.list_id = Some(value.clone()),
+                            "list_name" => p.list_name = Some(value.clone()),
+                            "variant" => p.variant = Some(value.clone()),
+                            "location_id" => p.location_id = Some(value.clone()),
+                            "price" => p.price = Some(value.clone()),
+                            "quantity" => p.quantity = Some(value.clone()),
+                            _ => p_custom_params.push((key, value.clone())),
+                        }
+                    }
+
+                    if !p_custom_params.is_empty() {
+                        p.custom_parameters = Some(p_custom_params);
+                    }
+                    p
+                })
+                .collect();
+
+            Ok(build_edgee_request(ga, ga_items).map_err(|e| e.to_string())?)
         } else {
             Err("Missing track data".to_string())
         }
@@ -142,20 +189,102 @@ impl Guest for GaComponent {
                 ga.user_property_number = Some(user_property_number);
             }
 
-            Ok(build_edgee_request(ga).map_err(|e| e.to_string())?)
+            Ok(build_edgee_request(ga, vec![]).map_err(|e| e.to_string())?)
         } else {
             Err("Missing user data".to_string())
         }
     }
 }
 
-fn build_edgee_request(ga: GaPayload) -> anyhow::Result<EdgeeRequest> {
+fn build_edgee_request(ga: GaPayload, ga_items: Vec<Product>) -> anyhow::Result<EdgeeRequest> {
     let mut headers = vec![];
     headers.push((String::from("content-length"), String::from("0")));
 
-    let querystring = serde_qs::to_string(&ga)?;
+    let mut querystring = serde_qs::to_string(&ga)?;
+    querystring = cleanup_querystring(&querystring)?;
 
-    let querystring = cleanup_querystring(&querystring)?;
+    if !ga_items.is_empty() {
+        // add the items to the querystring, to do so, each item is converted to a string and added to the querystring
+        // an item starts with &pr following by the item number (for example &pr1, &pr2, &pr3, etc.)
+        // then, the value of the item is one string with the item parameters separated by ~
+        // example: &pr1=id123456~nmTshirtbrThyngster~camen~c2shirts~pr129.99~k0currency~v0JPY~k1stock~v1yes
+        // then the string has to be urlencoded
+        let mut item_strings = Vec::new();
+        for (index, item) in ga_items.iter().enumerate() {
+            let mut item_parts = Vec::new();
+
+            if let Some(sku) = &item.sku {
+                item_parts.push(format!("id{}", sku));
+            }
+            if let Some(name) = &item.name {
+                item_parts.push(format!("nm{}", name));
+            }
+            if let Some(brand) = &item.brand {
+                item_parts.push(format!("br{}", brand));
+            }
+            if let Some(category) = &item.category {
+                item_parts.push(format!("ca{}", category));
+            }
+            if let Some(price) = &item.price {
+                item_parts.push(format!("pr{}", price));
+            }
+            if let Some(affiliation) = &item.affiliation {
+                item_parts.push(format!("af{}", affiliation));
+            }
+            if let Some(coupon) = &item.coupon {
+                item_parts.push(format!("cp{}", coupon));
+            }
+            if let Some(discount) = &item.discount {
+                item_parts.push(format!("ds{}", discount));
+            }
+            if let Some(index_val) = &item.index {
+                item_parts.push(format!("lp{}", index_val));
+            }
+            if let Some(category2) = &item.category2 {
+                item_parts.push(format!("c2{}", category2));
+            }
+            if let Some(category3) = &item.category3 {
+                item_parts.push(format!("c3{}", category3));
+            }
+            if let Some(category4) = &item.category4 {
+                item_parts.push(format!("c4{}", category4));
+            }
+            if let Some(category5) = &item.category5 {
+                item_parts.push(format!("c5{}", category5));
+            }
+            if let Some(list_id) = &item.list_id {
+                item_parts.push(format!("li{}", list_id));
+            }
+            if let Some(list_name) = &item.list_name {
+                item_parts.push(format!("ln{}", list_name));
+            }
+            if let Some(variant) = &item.variant {
+                item_parts.push(format!("va{}", variant));
+            }
+            if let Some(location_id) = &item.location_id {
+                item_parts.push(format!("lo{}", location_id));
+            }
+            if let Some(quantity) = &item.quantity {
+                item_parts.push(format!("qt{}", quantity));
+            }
+
+            // Add custom parameters if present
+            if let Some(custom_params) = &item.custom_parameters {
+                for (param_index, (key, value)) in custom_params.iter().enumerate() {
+                    item_parts.push(format!("k{}{}", param_index, key));
+                    item_parts.push(format!("v{}{}", param_index, value));
+                }
+            }
+
+            // Join all parts with ~ and URL encode
+            let item_value = urlencoding::encode(&item_parts.join("~")).into_owned();
+            item_strings.push(format!("&pr{}={}", index + 1, item_value));
+        }
+
+        // Add all item strings to querystring
+        let items_qs = item_strings.join("");
+        querystring = format!("{}{}", querystring, items_qs);
+    }
 
     Ok(EdgeeRequest {
         method: exports::provider::HttpMethod::Post,

@@ -142,57 +142,8 @@ impl Guest for GaComponent {
         }
     }
 
-    fn user(edgee_event: Event, cred_map: Dict) -> Result<EdgeeRequest, String> {
-        if let Data::User(ref data) = edgee_event.data {
-            if data.user_id.is_empty() && data.anonymous_id.is_empty() {
-                return Err("user_id or anonymous_id is not set".to_string());
-            }
-
-            let mut ga = GaPayload::new(&edgee_event, cred_map, "user".to_string())
-                .map_err(|e| e.to_string())?;
-
-            let mut event_parameter_string = HashMap::new();
-            event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());
-            ga.event_parameter_string = Some(event_parameter_string);
-
-            // override the user data with the event.data fields
-            let mut user_property_string: HashMap<String, String> = HashMap::new();
-            let mut user_property_number: HashMap<String, f64> = HashMap::new();
-            if !data.anonymous_id.is_empty() {
-                ga.user_id = Some(data.anonymous_id.clone());
-            }
-            if !data.user_id.is_empty() {
-                ga.user_id = Some(data.user_id.clone());
-                if !data.anonymous_id.is_empty() {
-                    user_property_string
-                        .insert("anonymous_id".to_string(), data.anonymous_id.clone());
-                }
-            }
-
-            // user properties
-            if !data.properties.is_empty() {
-                for (key, value) in data.properties.clone().iter() {
-                    // if key has a space, replace by a _
-                    let key = key.replace(" ", "_");
-                    if let Some(value) = value.parse::<f64>().ok() {
-                        user_property_number.insert(key, value);
-                    } else {
-                        user_property_string.insert(key, value.clone());
-                    }
-                }
-            }
-
-            if user_property_string.len() > 0 {
-                ga.user_property_string = Some(user_property_string);
-            }
-            if user_property_number.len() > 0 {
-                ga.user_property_number = Some(user_property_number);
-            }
-
-            Ok(build_edgee_request(ga, vec![]).map_err(|e| e.to_string())?)
-        } else {
-            Err("Missing user data".to_string())
-        }
+    fn user(_edgee_event: Event, _cred_map: Dict) -> Result<EdgeeRequest, String> {
+        Err("User event is not mapped to any Google Analytics event".to_string())
     }
 }
 

@@ -1,4 +1,3 @@
-use crate::exports::provider::{Dict, Event};
 use anyhow::anyhow;
 use chrono::Utc;
 use num_bigint::{BigInt, ToBigInt};
@@ -7,6 +6,8 @@ use rand::prelude::StdRng;
 use rand::{Rng, SeedableRng};
 use serde::Serialize;
 use std::collections::HashMap;
+
+use crate::exports::edgee::protocols::provider::{Dict, Event};
 
 /// from https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 #[derive(Serialize, Debug, Default)]

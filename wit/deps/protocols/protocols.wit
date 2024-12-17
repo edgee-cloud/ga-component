@@ -1,4 +1,4 @@
-package edgee:protocols ;
+package edgee:protocols;
 interface provider {
 type dict = list<tuple<string,string>>;
 

@@ -1,10 +1,11 @@
-use exports::provider::{Data, Dict, EdgeeRequest, Event, Guest};
+use crate::exports::edgee::protocols::provider::{Data, Dict, EdgeeRequest, Event, HttpMethod};
+use exports::edgee::protocols::provider::Guest;
 use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 
 mod ga_payload;
 
-wit_bindgen::generate!({world: "data-collection"});
+wit_bindgen::generate!({world: "data-collection", path: "wit", with: { "edgee:protocols/provider": generate }});
 export!(GaComponent);
 
 struct GaComponent;
@@ -238,7 +239,7 @@ fn build_edgee_request(ga: GaPayload, ga_items: Vec<Product>) -> anyhow::Result<
     }
 
     Ok(EdgeeRequest {
-        method: exports::provider::HttpMethod::Post,
+        method: HttpMethod::Post,
         url: format!("https://www.google-analytics.com/g/collect?{}", querystring),
         headers,
         body: String::new(),

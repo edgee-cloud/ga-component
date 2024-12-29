@@ -44,19 +44,17 @@ impl Guest for GaComponent {
 
             for (key, value) in data.properties.iter() {
                 let key = key.replace(" ", "_");
-                if let Some(value) = value.parse::<f64>().ok() {
-                    event_parameter_number.insert(key, value);
+                if value.parse::<f64>().is_ok() {
+                    event_parameter_number.insert(key, value.parse().unwrap());
+                } else if key == "currency" {
+                    ga.currency_code = Some(value.clone());
                 } else {
-                    if key == "currency" {
-                        ga.currency_code = Some(value.clone());
-                    } else {
-                        event_parameter_string.insert(key, value.clone());
-                    }
+                    event_parameter_string.insert(key, value.clone());
                 }
             }
 
             ga.event_parameter_string = Some(event_parameter_string);
-            if event_parameter_number.len() > 0 {
+            if !event_parameter_number.is_empty() {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
 
@@ -72,7 +70,7 @@ impl Guest for GaComponent {
                 return Err("Track is not set".to_string());
             }
 
-            let mut ga = GaPayload::new(&edgee_event, cred_map, String::from(data.name.clone()))
+            let mut ga = GaPayload::new(&edgee_event, cred_map, data.name.clone())
                 .map_err(|e| e.to_string())?;
 
             let mut event_parameter_string = HashMap::new();
@@ -82,19 +80,17 @@ impl Guest for GaComponent {
 
             for (key, value) in data.properties.iter() {
                 let key = key.replace(" ", "_");
-                if let Some(value) = value.parse::<f64>().ok() {
-                    event_parameter_number.insert(key, value);
+                if value.parse::<f64>().is_ok() {
+                    event_parameter_number.insert(key, value.parse().unwrap());
+                } else if key == "currency" {
+                    ga.currency_code = Some(value.clone());
                 } else {
-                    if key == "currency" {
-                        ga.currency_code = Some(value.clone());
-                    } else {
-                        event_parameter_string.insert(key, value.clone());
-                    }
+                    event_parameter_string.insert(key, value.clone());
                 }
             }
 
             ga.event_parameter_string = Some(event_parameter_string);
-            if event_parameter_number.len() > 0 {
+            if !event_parameter_number.is_empty() {
                 ga.event_parameter_number = Some(event_parameter_number);
             }
 
@@ -149,8 +145,7 @@ impl Guest for GaComponent {
 }
 
 fn build_edgee_request(ga: GaPayload, ga_items: Vec<Product>) -> anyhow::Result<EdgeeRequest> {
-    let mut headers = vec![];
-    headers.push((String::from("content-length"), String::from("0")));
+    let headers = vec![(String::from("content-length"), String::from("0"))];
 
     let mut querystring = serde_qs::to_string(&ga)?;
     querystring = cleanup_querystring(&querystring)?;
@@ -276,12 +271,10 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
                     } else {
                         "ep"
                     }
+                } else if chars[i + 2] == 'n' {
+                    "upn"
                 } else {
-                    if chars[i + 2] == 'n' {
-                        "upn"
-                    } else {
-                        "up"
-                    }
+                    "up"
                 };
                 cleaned_qs.push_str(base);
                 cleaned_qs.push('.'); // Replace "[" with "."

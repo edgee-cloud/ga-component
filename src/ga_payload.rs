@@ -267,7 +267,7 @@ pub(crate) struct GaPayload {
 }
 
 /// Product (item). Converted into a GA4 string, it contains an item details and all it's params.
-/// Example Value	&pr1=id123456~nmTshirtbrThyngster~camen~c2shirts~pr129.99~k0currency~v0JPY~k1stock~v1yes
+/// Example Value: &pr1=id123456~nmTshirtbrThyngster~camen~c2shirts~pr129.99~k0currency~v0JPY~k1stock~v1yes
 #[derive(Serialize, Debug, Default)]
 pub struct Product {
     // items parameters (An event can only hold up to 200 items details. Any items above that limit will be removed from the payload)
@@ -336,14 +336,14 @@ impl GaPayload {
         }
         .to_string();
 
-        let mut ga = Self::default();
-
-        // todo missing ga4.GTMHashInfo
-        ga.protocol_version = "2".to_string();
-        ga.tracking_id = measurement_id;
-        ga.event_name = event_name;
-        ga.random_page_load_hash = random_page_load_hash();
-        ga.external_event = Some("1".to_string());
+        let mut ga = GaPayload {
+            protocol_version: "2".to_string(),
+            tracking_id: measurement_id,
+            event_name,
+            random_page_load_hash: random_page_load_hash(),
+            external_event: Some("1".to_string()),
+            ..GaPayload::default()
+        };
 
         // page
         if !edgee_event.context.page.title.is_empty() {
@@ -370,7 +370,7 @@ impl GaPayload {
         ga.pscdl = Some("denied".to_string());
 
         // forge the typical ga ClientId
-        let first_seen = edgee_event.context.session.first_seen.clone();
+        let first_seen = edgee_event.context.session.first_seen;
 
         // todo : ID continuity
         let ga_user_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
@@ -453,18 +453,18 @@ impl GaPayload {
             for (key, value) in edgee_event.context.user.properties.clone().iter() {
                 // if key has a space, replace by a _
                 let key = key.replace(" ", "_");
-                if let Some(value) = value.parse::<f64>().ok() {
-                    user_property_number.insert(key, value);
+                if value.parse::<f64>().is_ok() {
+                    user_property_number.insert(key, value.parse().unwrap());
                 } else {
                     user_property_string.insert(key, value.clone());
                 }
             }
         }
 
-        if user_property_string.len() > 0 {
+        if !user_property_string.is_empty() {
             ga.user_property_string = Some(user_property_string);
         }
-        if user_property_number.len() > 0 {
+        if !user_property_number.is_empty() {
             ga.user_property_number = Some(user_property_number);
         }
 
@@ -553,7 +553,7 @@ fn uuid_to_nine_digit_string(uuid: &str) -> anyhow::Result<String> {
 
     // Calculate the modulo to limit the number to 9 digits
     let modulo = 1000000000.to_bigint().unwrap();
-    hash_bigint = hash_bigint % modulo;
+    hash_bigint %= modulo;
 
     // if the number is not 9 digits, add leading ones
     let hash_bigint = if hash_bigint.to_string().len() < 9 {
@@ -623,7 +623,7 @@ mod tests {
     #[test]
     fn random_page_load_hash_length() {
         let result = random_page_load_hash();
-        assert!(result.len() > 0);
+        assert!(!result.is_empty());
     }
 
     #[test]
@@ -636,6 +636,6 @@ mod tests {
     fn random_page_load_hash_is_within_range() {
         let result = random_page_load_hash();
         let number: i64 = result.parse().unwrap();
-        assert!(number >= 0 && number <= 2147483647);
+        assert!((0..=2147483647).contains(&number));
     }
 }

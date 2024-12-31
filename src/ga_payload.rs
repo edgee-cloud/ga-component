@@ -7,7 +7,7 @@ use rand::{Rng, SeedableRng};
 use serde::Serialize;
 use std::collections::HashMap;
 
-use crate::exports::edgee::protocols::provider::{Dict, Event};
+use crate::exports::edgee::protocols::provider::{Consent, Dict, Event};
 
 /// from https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 #[derive(Serialize, Debug, Default)]
@@ -361,13 +361,23 @@ impl GaPayload {
             ga.document_referrer = Some(edgee_event.context.page.referrer.clone());
         }
 
-        // Consent is set to analytics only
-        ga.google_consent_status = Some("G101".to_string());
-        ga.gcd = Some("13p3t3p2p5l1".to_string());
-        ga.npa = Some("1".to_string());
-        ga.dma_cps = Some("-".to_string());
-        ga.dma = Some("1".to_string());
-        ga.pscdl = Some("denied".to_string());
+        if edgee_event.consent.is_some() && edgee_event.consent.unwrap() == Consent::Granted {
+            // Consent is fully granted
+            ga.google_consent_status = Some("G111".to_string());
+            ga.gcd = Some("13t3t3t2t5l1".to_string());
+            ga.npa = Some("0".to_string());
+            ga.dma_cps = Some("syphamo".to_string());
+            ga.dma = Some("1".to_string());
+            ga.pscdl = Some("noapi".to_string());
+        } else {
+            // Consent is set to analytics only
+            ga.google_consent_status = Some("G101".to_string());
+            ga.gcd = Some("13p3t3p2p5l1".to_string());
+            ga.npa = Some("1".to_string());
+            ga.dma_cps = Some("-".to_string());
+            ga.dma = Some("1".to_string());
+            ga.pscdl = Some("denied".to_string());
+        }
 
         // forge the typical ga ClientId
         let first_seen = edgee_event.context.session.first_seen;

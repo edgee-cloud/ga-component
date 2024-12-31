@@ -1,5 +1,4 @@
 <div align="center">
-
 <p align="center">
   <a href="https://www.edgee.cloud">
     <picture>
@@ -9,62 +8,104 @@
     <h1 align="center">Edgee</h1>
   </a>
 </p>
-
-
-**The full-stack edge platform for your edge oriented applications.**
-
-[![Edgee](https://img.shields.io/badge/edgee-open%20source-blueviolet.svg)](https://www.edgee.cloud)
-[![Edgee](https://img.shields.io/badge/slack-edgee-blueviolet.svg?logo=slack)](https://www.edgee.cloud/slack)
-[![Docs](https://img.shields.io/badge/docs-published-blue)](https://docs.edgee.cloud)
-
 </div>
 
-This component implements the data collection protocol between [Google Analytics](https://marketingplatform.google.com/about/analytics/) and [Edgee](https://www.edgee.cloud).
+# Google Analytics Component for Edgee
 
+This component enables seamless integration between [Edgee](https://www.edgee.cloud) and [Google Analytics](https://marketingplatform.google.com/about/analytics/), allowing you to collect and forward analytics data while respecting user privacy settings.
 
-### Event mapping:
+## Quick Start
 
-Here is the mapping between Edgee events and GA events:
+1. Download the latest component version from our [releases page](../../releases)
+2. Place the `ga.wasm` file in your server (e.g., `/var/edgee/components`)
+3. Add the following configuration to your `edgee.toml`:
 
-| Edgee event | GA Event  |
-|-------------|-----------|
-| Page   | `page_view`    |
-| Track  | Name of the event |
-| User   | -              |
-
-The User event is not mapped to any Google Analytics event. That means each time you make a `user` call, Edgee won't send any event to Google Analytics.
-
-But when you make a `user` call using Edgee's JS library or Data Layer, the `user_id`, `anonymous_id` and `properties` are stored in the user's device.
-This allows the user's data to be added to any subsequent page or follow-up calls for the user, so that you can correctly attribute these actions.
-
-
-## Usage
-
-- Download the latest version in our [releases page](../../releases). 
-- Place the wasm file in a known place in your server (e.g. `/var/edgee/components`).
-- Update your edgee proxy config:
 ```toml
 [[destinations.data_collection]]
 name = "google analytics"
 component = "/var/edgee/components/ga.wasm"
-credentials.ga_measurement_id = "..."
+credentials.ga_measurement_id = "G-XXXXXXXXXX"  # Your GA4 Measurement ID
 ```
 
-## Contributing
-If you're interested in contributing to Edgee, read our [contribution guidelines](./CONTRIBUTING.md)
+## Event Handling
 
-## Reporting Security Vulnerabilities
-If you've found a vulnerability or potential vulnerability in our code, please let us know at
-[edgee-security](mailto:security@edgee.cloud).
+### Event Mapping
+The component maps Edgee events to Google Analytics events as follows:
 
-## Building from source
+| Edgee Event | GA4 Event    | Description |
+|-------------|--------------|-------------|
+| Page        | `page_view`  | Triggered when a user views a page |
+| Track       | Custom Event | Uses the provided event name directly |
+| User        | N/A         | Used for user identification only |
 
-To build the wasm file from source, you need to have installed
+### User Event Handling
+While User events don't generate GA events directly, they serve an important purpose:
+- Stores `user_id`, `anonymous_id`, and `properties` on the user's device
+- Enriches subsequent Page and Track events with user data
+- Enables proper user attribution across sessions
+
+## Configuration Options
+
+### Basic Configuration
+```toml
+[[destinations.data_collection]]
+name = "google analytics"
+component = "/var/edgee/components/ga.wasm"
+credentials.ga_measurement_id = "G-XXXXXXXXXX"
+
+# Optional configurations
+config.anonymization = true        # Enable/disable data anonymization in case of pending or denied consent
+config.default_consent = "pending" # Set default consent status if not specified by the user
+```
+
+### Event Controls
+Control which events are forwarded to Google Analytics:
+```toml
+config.page_event_enabled = true   # Enable/disable page event
+config.track_event_enabled = true  # Enable/disable track event
+config.user_event_enabled = true   # Enable/disable user event
+```
+
+### Consent Management
+Before sending events to Google Analytics, you can set the user consent using the Edgee SDK: 
+```javascript
+edgee.consent("granted");
+```
+
+Or using the Data Layer:
+```html
+<script id="__EDGEE_DATA_LAYER__" type="application/json">
+  {
+    "data_collection": {
+      "consent": "granted"
+    }
+  }
+</script>
+```
+
+If the consent is not set, the component will use the default consent status.
+
+| Consent | Anonymization | Google Analytics Consent |
+|---------|---------------|--------------------------|
+| pending | true          | analytics only           |
+| denied  | true          | analytics only           |
+| granted | false         | fully granted            |
+
+## Development
+
+### Building from Source
+Prerequisites:
 - [Rust](https://www.rust-lang.org/tools/install)
-- `wasm32-wasip2` target: run `rustup target add wasm32-wasip2`
+- WASM target: `rustup target add wasm32-wasip2`
+- wit-deps: `cargo install wit-deps`
 
-Then you can run the following commands:
-
+Build command:
 ```bash
 make build
 ```
+
+### Contributing
+Interested in contributing? Read our [contribution guidelines](./CONTRIBUTING.md)
+
+### Security
+Report security vulnerabilities to [security@edgee.cloud](mailto:security@edgee.cloud)

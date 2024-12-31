@@ -100,6 +100,7 @@ Prerequisites:
 
 Build command:
 ```bash
+make wit-deps
 make build
 ```
 

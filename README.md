@@ -2,15 +2,14 @@
 <p align="center">
   <a href="https://www.edgee.cloud">
     <picture>
-      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.edgee.cloud/img/favicon-dark.svg">
-      <img src="https://cdn.edgee.cloud/img/favicon.svg" height="100" alt="Edgee">
+      <source media="(prefers-color-scheme: dark)" srcset="https://cdn.edgee.cloud/img/component-dark.svg">
+      <img src="https://cdn.edgee.cloud/img/component.svg" height="100" alt="Edgee">
     </picture>
-    <h1 align="center">Edgee</h1>
   </a>
 </p>
 </div>
 
-# Google Analytics Component for Edgee
+<h1 align="center">Google Analytics Component for Edgee</h1>
 
 This component enables seamless integration between [Edgee](https://www.edgee.cloud) and [Google Analytics](https://marketingplatform.google.com/about/analytics/), allowing you to collect and forward analytics data while respecting user privacy settings.
 

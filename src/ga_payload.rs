@@ -382,9 +382,16 @@ impl GaPayload {
         // forge the typical ga ClientId
         let first_seen = edgee_event.context.session.first_seen;
 
-        // todo : ID continuity
-        let ga_user_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
-        ga.client_id = format!("{}.{}", ga_user_id, first_seen);
+        // client_id with ID continuity if enabled
+        let ga_user_id = if !edgee_event.context.user.component_id.is_empty() {
+            edgee_event.context.user.component_id.clone()
+        } else {
+            let nine_digit_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
+            let ga_id = format!("{}.{}", nine_digit_id, first_seen);
+            ga_id
+        };
+
+        ga.client_id = ga_user_id;
 
         ga.hit_counter = "1".to_string();
 

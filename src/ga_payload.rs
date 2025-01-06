@@ -382,9 +382,14 @@ impl GaPayload {
         // forge the typical ga ClientId
         let first_seen = edgee_event.context.session.first_seen;
 
-        // todo : ID continuity
-        let ga_user_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
-        ga.client_id = format!("{}.{}", ga_user_id, first_seen);
+        // if edgee_id is a uuid, convert it to a 9 digit string
+        let ga_client_id = if is_valid_uuid(edgee_event.context.user.edgee_id.clone().as_str()) {
+            let nine_digit_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
+            format!("{}.{}", nine_digit_id, first_seen)
+        } else {
+            edgee_event.context.user.edgee_id.clone()
+        };
+        ga.client_id = ga_client_id;
 
         ga.hit_counter = "1".to_string();
 
@@ -575,6 +580,13 @@ fn uuid_to_nine_digit_string(uuid: &str) -> anyhow::Result<String> {
 
     // Return the result as a string
     Ok(hash_bigint.to_string())
+}
+
+fn is_valid_uuid(uuid_str: &str) -> bool {
+    match uuid::Uuid::parse_str(uuid_str) {
+        Ok(uuid_obj) => uuid_obj.get_version_num() == 4,
+        Err(_) => false,
+    }
 }
 
 #[cfg(test)]

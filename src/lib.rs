@@ -306,9 +306,11 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::exports::edgee::protocols::provider::{
+        Campaign, Client, Context, EventType, PageData, Session, TrackData, UserData,
+    };
     use exports::edgee::protocols::provider::Consent;
     use uuid::Uuid;
-    use crate::exports::edgee::protocols::provider::{EventType, PageData, UserData, TrackData, Client, Campaign, Session, Context};
 
     #[test]
     fn cleanup_querystring_replaces_correctly() {
@@ -359,7 +361,7 @@ mod tests {
                 ("prop1".to_string(), "value1".to_string()),
                 ("prop2".to_string(), "10".to_string()),
             ],
-        }
+        };
     }
 
     fn sample_context(edgee_id: String, locale: String, session_start: bool) -> Context {
@@ -404,8 +406,8 @@ mod tests {
                 session_start: session_start,
                 first_seen: 123,
                 last_seen: 123,
-            }
-        }
+            },
+        };
     }
 
     fn sample_page_data() -> PageData {
@@ -423,10 +425,15 @@ mod tests {
                 ("prop2".to_string(), "10".to_string()),
                 ("currency".to_string(), "USD".to_string()),
             ],
-        }
+        };
     }
 
-    fn sample_page_event(consent: Option<Consent>, edgee_id: String, locale: String, session_start: bool) -> Event {
+    fn sample_page_event(
+        consent: Option<Consent>,
+        edgee_id: String,
+        locale: String,
+        session_start: bool,
+    ) -> Event {
         return Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
@@ -445,7 +452,10 @@ mod tests {
             products: vec![
                 vec![("sku".to_string(), "SKU_12345".to_string())],
                 vec![("name".to_string(), "Stan and Friends Tee".to_string())],
-                vec![("affiliation".to_string(), "Google Merchandise Store".to_string())],
+                vec![(
+                    "affiliation".to_string(),
+                    "Google Merchandise Store".to_string(),
+                )],
                 vec![("coupon".to_string(), "SUMMER_FUN".to_string())],
                 vec![("discount".to_string(), "2.22".to_string())],
                 vec![("index".to_string(), "0".to_string())],
@@ -458,7 +468,10 @@ mod tests {
                 vec![("list_id".to_string(), "related_products".to_string())],
                 vec![("list_name".to_string(), "Related Products".to_string())],
                 vec![("variant".to_string(), "green".to_string())],
-                vec![("location_id".to_string(), "ChIJIQBpAG2ahYAR_6128GcTUEo".to_string())],
+                vec![(
+                    "location_id".to_string(),
+                    "ChIJIQBpAG2ahYAR_6128GcTUEo".to_string(),
+                )],
                 vec![("price".to_string(), "10.1".to_string())],
                 vec![("quantity".to_string(), "3".to_string())],
                 vec![("custom-property".to_string(), "whatever".to_string())],
@@ -468,10 +481,16 @@ mod tests {
                 ("prop2".to_string(), "10".to_string()),
                 ("currency".to_string(), "USD".to_string()),
             ],
-        }
+        };
     }
 
-    fn sample_track_event(event_name: String, consent: Option<Consent>, edgee_id: String, locale: String, session_start: bool) -> Event {
+    fn sample_track_event(
+        event_name: String,
+        consent: Option<Consent>,
+        edgee_id: String,
+        locale: String,
+        session_start: bool,
+    ) -> Event {
         return Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
@@ -484,7 +503,12 @@ mod tests {
         };
     }
 
-    fn sample_user_event(consent: Option<Consent>, edgee_id: String, locale: String, session_start: bool) -> Event {
+    fn sample_user_event(
+        consent: Option<Consent>,
+        edgee_id: String,
+        locale: String,
+        session_start: bool,
+    ) -> Event {
         return Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
@@ -496,6 +520,141 @@ mod tests {
             consent: consent,
         };
     }
+
+    #[test]
+    fn ga_component_page_with_consent() {
+        let event = sample_page_event(
+            Some(Consent::Granted),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::page(event, credentials);
+
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+        assert_eq!(
+            edgee_request
+                .url
+                .starts_with("https://www.google-analytics.com"),
+            true
+        );
+        // add more checks (headers, querystring, etc.)
+    }
+
+    #[test]
+    fn ga_component_page_without_consent() {
+        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::page(event, credentials);
+
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+    }
+
+    #[test]
+    fn ga_component_page_with_edgee_id_uuid() {
+        let event = sample_page_event(None, Uuid::new_v4().to_string(), "fr".to_string(), true);
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::page(event, credentials);
+
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+    }
+
+    #[test]
+    fn ga_component_page_with_empty_locale() {
+        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), true);
+
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::page(event, credentials);
+
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+    }
+
+    #[test]
+    fn ga_component_page_not_session_start() {
+        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), false);
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::page(event, credentials);
+
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+    }
+
+    #[test]
+    fn ga_component_page_without_measurement_id_fails() {
+        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
+        let credentials: Vec<(String, String)> = vec![];
+        let result = GaComponent::page(event, credentials); // this should panic!
+        assert_eq!(result.is_err(), true);
+    }
+
+    #[test]
+    fn ga_component_track_with_consent() {
+        let event = sample_track_event(
+            "event-name".to_string(),
+            Some(Consent::Granted),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::track(event, credentials);
+        assert_eq!(result.clone().is_err(), false);
+        let edgee_request = result.unwrap();
+        assert_eq!(edgee_request.method, HttpMethod::Post);
+        assert_eq!(edgee_request.body.len(), 0);
+    }
+
+    #[test]
+    fn ga_component_track_with_empty_name_fails() {
+        let event = sample_track_event(
+            "".to_string(),
+            Some(Consent::Granted),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::track(event, credentials);
+        assert_eq!(result.is_err(), true);
+    }
+
+    #[test]
+    fn ga_component_user_event() {
+        let event = sample_user_event(
+            Some(Consent::Granted),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials: Vec<(String, String)> =
+            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let result = GaComponent::user(event, credentials);
+        assert_eq!(result.clone().is_err(), true);
+    }
+
+    /*
 
     fn sample_page_event_wrong_event_type() -> Event {
         return Event {
@@ -511,107 +670,8 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_with_consent() {
-        let event = sample_page_event(Some(Consent::Granted), "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::page(event, credentials);
-
-        assert_eq!(result.is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-        assert_eq!(edgee_request.url.starts_with("https://www.google-analytics.com"), true);
-        // add more checks (headers, querystring, etc.)
-    }
-
-    #[test]
-    fn ga_component_page_without_consent() {
-        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::page(event, credentials);
-
-        assert_eq!(result.is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-    }
-
-    #[test]
-    fn ga_component_page_with_edgee_id_uuid() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::page(event, credentials);
-
-        assert_eq!(result.is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-    }
-
-    #[test]
-    fn ga_component_page_with_empty_locale() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), true);
-
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::page(event, credentials);
-
-        assert_eq!(result.is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-    }
-
-    #[test]
-    fn ga_component_page_not_session_start() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), false);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::page(event, credentials);
-
-        assert_eq!(result.is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-    }
-    
-    #[test]
-    fn ga_component_page_without_measurement_id_fails() {
-        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![];
-        let result = GaComponent::page(event, credentials); // this should panic!
-        assert_eq!(result.is_err(), true);
-    }
-
-    #[test]
-    fn ga_component_track_with_consent() {
-        let event = sample_track_event("event-name".to_string(), Some(Consent::Granted), "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::track(event, credentials);
-        assert_eq!(result.clone().is_err(), false);
-        let edgee_request = result.unwrap();
-        assert_eq!(edgee_request.method, HttpMethod::Post);
-        assert_eq!(edgee_request.body.len(), 0);
-    }
-
-    #[test]
-    fn ga_component_track_with_empty_name_fails() {
-        let event = sample_track_event("".to_string(), Some(Consent::Granted), "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::track(event, credentials);
-        assert_eq!(result.is_err(), true);
-    }
-
-    #[test]
-    fn ga_component_user_event() {
-        let event = sample_user_event(Some(Consent::Granted), "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
-        let result = GaComponent::user(event, credentials);
-        assert_eq!(result.clone().is_err(), true);
-    }
-
-    /*
-    THIS SHOULD FAIL BUT IT WORKS FINE =)
-    #[test]
     fn ga_component_page_with_wrong_event_type() {
+        // THIS TEST SHOULD FAIL BUT IT WORKS FINE =)
         let event = sample_page_event_wrong_event_type();
         let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
         let result = GaComponent::page(event, credentials);
@@ -619,5 +679,4 @@ mod tests {
         assert_eq!(result.is_err(), true);
     }
      */
-
 }

@@ -18,3 +18,6 @@ build: ## Build the wasi component
 
 test: ## Test the component on host platform
 	cargo test --lib
+
+test.coverage:
+	cargo llvm-cov --open

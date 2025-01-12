@@ -649,7 +649,15 @@ mod tests {
         let result = GaComponent::user(event, credentials);
 
         assert_eq!(result.clone().is_err(), true);
-        assert_eq!(result.clone().err().unwrap().to_string().contains("not mapped"), true);
+        assert_eq!(
+            result
+                .clone()
+                .err()
+                .unwrap()
+                .to_string()
+                .contains("not mapped"),
+            true
+        );
     }
 
     #[test]

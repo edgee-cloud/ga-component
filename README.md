@@ -97,6 +97,7 @@ Prerequisites:
 - [Rust](https://www.rust-lang.org/tools/install)
 - WASM target: `rustup target add wasm32-wasip2`
 - wit-deps: `cargo install wit-deps`
+- cargo-llvm-cov: `cargo install cargo-llvm-cov`
 
 Build command:
 ```bash

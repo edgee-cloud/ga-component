@@ -521,6 +521,10 @@ mod tests {
         };
     }
 
+    fn sample_credentials() -> Vec<(String, String)> {
+        return vec![("ga_measurement_id".to_string(), "abc".to_string())];
+    }
+
     #[test]
     fn ga_component_page_with_consent() {
         let event = sample_page_event(
@@ -529,8 +533,7 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
 
         assert_eq!(result.is_err(), false);
@@ -538,9 +541,7 @@ mod tests {
         assert_eq!(edgee_request.method, HttpMethod::Post);
         assert_eq!(edgee_request.body.len(), 0);
         assert_eq!(
-            edgee_request
-                .url
-                .starts_with("https://www.google-analytics.com"),
+            edgee_request.url.starts_with("https://www.google-analytics.com"),
             true
         );
         // add more checks (headers, querystring, etc.)
@@ -548,9 +549,13 @@ mod tests {
 
     #[test]
     fn ga_component_page_without_consent() {
-        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let event = sample_page_event(
+            None,
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
 
         assert_eq!(result.is_err(), false);
@@ -561,9 +566,13 @@ mod tests {
 
     #[test]
     fn ga_component_page_with_edgee_id_uuid() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let event = sample_page_event(
+            None,
+            Uuid::new_v4().to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
 
         assert_eq!(result.is_err(), false);
@@ -574,10 +583,14 @@ mod tests {
 
     #[test]
     fn ga_component_page_with_empty_locale() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), true);
+        let event = sample_page_event(
+            None,
+            Uuid::new_v4().to_string(),
+            "".to_string(),
+            true,
+        );
 
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
 
         assert_eq!(result.is_err(), false);
@@ -588,9 +601,13 @@ mod tests {
 
     #[test]
     fn ga_component_page_not_session_start() {
-        let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), false);
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let event = sample_page_event(
+            None,
+            Uuid::new_v4().to_string(),
+            "".to_string(),
+            false,
+        );
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
 
         assert_eq!(result.is_err(), false);
@@ -601,8 +618,13 @@ mod tests {
 
     #[test]
     fn ga_component_page_without_measurement_id_fails() {
-        let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
-        let credentials: Vec<(String, String)> = vec![];
+        let event = sample_page_event(
+            None,
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        let credentials: Vec<(String, String)> = vec![]; // empty
         let result = GaComponent::page(event, credentials); // this should panic!
         assert_eq!(result.is_err(), true);
     }
@@ -616,8 +638,7 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::track(event, credentials);
         assert_eq!(result.clone().is_err(), false);
         let edgee_request = result.unwrap();
@@ -634,8 +655,7 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::track(event, credentials);
         assert_eq!(result.is_err(), true);
     }
@@ -648,8 +668,7 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        let credentials: Vec<(String, String)> =
-            vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::user(event, credentials);
         assert_eq!(result.clone().is_err(), true);
     }
@@ -673,9 +692,8 @@ mod tests {
     fn ga_component_page_with_wrong_event_type() {
         // THIS TEST SHOULD FAIL BUT IT WORKS FINE =)
         let event = sample_page_event_wrong_event_type();
-        let credentials: Vec<(String, String)> = vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
-
         assert_eq!(result.is_err(), true);
     }
      */

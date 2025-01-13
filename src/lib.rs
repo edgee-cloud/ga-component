@@ -310,8 +310,8 @@ mod tests {
         Campaign, Client, Context, EventType, PageData, Session, TrackData, UserData,
     };
     use exports::edgee::protocols::provider::Consent;
-    use uuid::Uuid;
     use pretty_assertions::assert_eq;
+    use uuid::Uuid;
 
     #[test]
     fn cleanup_querystring_replaces_correctly() {

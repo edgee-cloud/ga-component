@@ -311,6 +311,7 @@ mod tests {
     };
     use exports::edgee::protocols::provider::Consent;
     use uuid::Uuid;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn cleanup_querystring_replaces_correctly() {
@@ -526,7 +527,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_with_consent() {
+    fn page_with_consent() {
         let event = sample_page_event(
             Some(Consent::Granted),
             "abc".to_string(),
@@ -550,7 +551,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_without_consent() {
+    fn page_without_consent() {
         let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
         let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
@@ -562,7 +563,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_with_edgee_id_uuid() {
+    fn page_with_edgee_id_uuid() {
         let event = sample_page_event(None, Uuid::new_v4().to_string(), "fr".to_string(), true);
         let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
@@ -574,7 +575,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_with_empty_locale() {
+    fn page_with_empty_locale() {
         let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), true);
 
         let credentials = sample_credentials();
@@ -587,7 +588,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_not_session_start() {
+    fn page_not_session_start() {
         let event = sample_page_event(None, Uuid::new_v4().to_string(), "".to_string(), false);
         let credentials = sample_credentials();
         let result = GaComponent::page(event, credentials);
@@ -599,7 +600,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_without_measurement_id_fails() {
+    fn page_without_measurement_id_fails() {
         let event = sample_page_event(None, "abc".to_string(), "fr".to_string(), true);
         let credentials: Vec<(String, String)> = vec![]; // empty
         let result = GaComponent::page(event, credentials); // this should panic!
@@ -607,7 +608,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_track_with_consent() {
+    fn track_with_consent() {
         let event = sample_track_event(
             "event-name".to_string(),
             Some(Consent::Granted),
@@ -624,7 +625,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_track_with_empty_name_fails() {
+    fn track_with_empty_name_fails() {
         let event = sample_track_event(
             "".to_string(),
             Some(Consent::Granted),
@@ -638,7 +639,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_user_event() {
+    fn user_event() {
         let event = sample_user_event(
             Some(Consent::Granted),
             "abc".to_string(),
@@ -661,7 +662,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_track_event_without_user_context_properties_and_empty_user_id() {
+    fn track_event_without_user_context_properties_and_empty_user_id() {
         let mut event = sample_track_event(
             "event-name".to_string(),
             Some(Consent::Granted),
@@ -693,7 +694,7 @@ mod tests {
     }
 
     #[test]
-    fn ga_component_page_with_wrong_event_type() {
+    fn page_with_wrong_event_type() {
         // THIS TEST SHOULD FAIL BUT IT WORKS FINE =)
         let event = sample_page_event_wrong_event_type();
         let credentials = sample_credentials();

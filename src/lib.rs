@@ -1,4 +1,6 @@
-use crate::exports::edgee::protocols::data_collection::{Data, Dict, EdgeeRequest, Event, HttpMethod};
+use crate::exports::edgee::protocols::data_collection::{
+    Data, Dict, EdgeeRequest, Event, HttpMethod,
+};
 use exports::edgee::protocols::data_collection::Guest;
 use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;

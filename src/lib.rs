@@ -6,7 +6,7 @@ use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 mod ga_payload;
 
-wit_bindgen::generate!({world: "edgee", path: "wit", with: { "edgee:protocols/data-collection": generate }});
+wit_bindgen::generate!({world: "data-collection", path: "wit", generate_all});
 export!(GaComponent);
 
 struct GaComponent;

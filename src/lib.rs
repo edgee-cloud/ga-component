@@ -1,10 +1,10 @@
-use crate::exports::edgee::protocols::provider::{Data, Dict, EdgeeRequest, Event, HttpMethod};
-use exports::edgee::protocols::provider::Guest;
+use crate::exports::edgee::protocols::data_collection::{Data, Dict, EdgeeRequest, Event, HttpMethod};
+use exports::edgee::protocols::data_collection::Guest;
 use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 mod ga_payload;
 
-wit_bindgen::generate!({world: "data-collection", path: "wit", with: { "edgee:protocols/provider": generate }});
+wit_bindgen::generate!({world: "edgee", path: "wit", with: { "edgee:protocols/data-collection": generate }});
 export!(GaComponent);
 
 struct GaComponent;
@@ -306,10 +306,10 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::exports::edgee::protocols::provider::{
+    use crate::exports::edgee::protocols::data_collection::{
         Campaign, Client, Context, EventType, PageData, Session, TrackData, UserData,
     };
-    use exports::edgee::protocols::provider::Consent;
+    use exports::edgee::protocols::data_collection::Consent;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
 
@@ -354,25 +354,25 @@ mod tests {
     }
 
     fn sample_user_data(edgee_id: String) -> UserData {
-        return UserData {
+        UserData {
             user_id: "123".to_string(),
             anonymous_id: "456".to_string(),
-            edgee_id: edgee_id,
+            edgee_id,
             properties: vec![
                 ("prop1".to_string(), "value1".to_string()),
                 ("prop2".to_string(), "10".to_string()),
             ],
-        };
+        }
     }
 
     fn sample_context(edgee_id: String, locale: String, session_start: bool) -> Context {
-        return Context {
+        Context {
             page: sample_page_data(),
             user: sample_user_data(edgee_id),
             client: Client {
                 city: "Paris".to_string(),
                 ip: "192.168.0.1".to_string(),
-                locale: locale,
+                locale,
                 timezone: "CET".to_string(),
                 user_agent: "Chrome".to_string(),
                 user_agent_architecture: "fuck knows".to_string(),
@@ -404,15 +404,15 @@ mod tests {
                 session_id: "random".to_string(),
                 previous_session_id: "random".to_string(),
                 session_count: 2,
-                session_start: session_start,
+                session_start,
                 first_seen: 123,
                 last_seen: 123,
             },
-        };
+        }
     }
 
     fn sample_page_data() -> PageData {
-        return PageData {
+        PageData {
             name: "page name".to_string(),
             category: "category".to_string(),
             keywords: vec!["value1".to_string(), "value2".into()],
@@ -426,7 +426,7 @@ mod tests {
                 ("prop2".to_string(), "10".to_string()),
                 ("currency".to_string(), "USD".to_string()),
             ],
-        };
+        }
     }
 
     fn sample_page_event(
@@ -435,7 +435,7 @@ mod tests {
         locale: String,
         session_start: bool,
     ) -> Event {
-        return Event {
+        Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
             timestamp_millis: 123,
@@ -443,12 +443,12 @@ mod tests {
             event_type: EventType::Page,
             data: Data::Page(sample_page_data()),
             context: sample_context(edgee_id, locale, session_start),
-            consent: consent,
-        };
+            consent,
+        }
     }
 
     fn sample_track_data(event_name: String) -> TrackData {
-        return TrackData {
+        TrackData {
             name: event_name,
             products: vec![
                 vec![("sku".to_string(), "SKU_12345".to_string())],
@@ -482,7 +482,7 @@ mod tests {
                 ("prop2".to_string(), "10".to_string()),
                 ("currency".to_string(), "USD".to_string()),
             ],
-        };
+        }
     }
 
     fn sample_track_event(
@@ -492,7 +492,7 @@ mod tests {
         locale: String,
         session_start: bool,
     ) -> Event {
-        return Event {
+        Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
             timestamp_millis: 123,
@@ -500,8 +500,8 @@ mod tests {
             event_type: EventType::Track,
             data: Data::Track(sample_track_data(event_name)),
             context: sample_context(edgee_id, locale, session_start),
-            consent: consent,
-        };
+            consent,
+        }
     }
 
     fn sample_user_event(
@@ -510,7 +510,7 @@ mod tests {
         locale: String,
         session_start: bool,
     ) -> Event {
-        return Event {
+        Event {
             uuid: Uuid::new_v4().to_string(),
             timestamp: 123,
             timestamp_millis: 123,
@@ -518,12 +518,12 @@ mod tests {
             event_type: EventType::User,
             data: Data::User(sample_user_data(edgee_id.clone())),
             context: sample_context(edgee_id, locale, session_start),
-            consent: consent,
-        };
+            consent,
+        }
     }
 
     fn sample_credentials() -> Vec<(String, String)> {
-        return vec![("ga_measurement_id".to_string(), "abc".to_string())];
+        vec![("ga_measurement_id".to_string(), "abc".to_string())]
     }
 
     #[test]

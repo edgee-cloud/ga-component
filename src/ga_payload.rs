@@ -322,10 +322,10 @@ pub struct Product {
 impl GaPayload {
     pub(crate) fn new(
         edgee_event: &Event,
-        cred_map: Dict,
+        settings: Dict,
         event_name: String,
     ) -> anyhow::Result<Self> {
-        let cred: HashMap<String, String> = cred_map
+        let cred: HashMap<String, String> = settings
             .iter()
             .map(|(key, value)| (key.to_string(), value.to_string()))
             .collect();

@@ -1,0 +1,30 @@
+manifest-version = 1
+
+[component]
+name = "Google Analytics"
+version = "0.7.0"
+category = "data-collection"
+subcategory = "analytics"
+description = """
+Get a complete understanding of your customers across devices and platforms. Google Analytics gives you the tools, free of charge, to understand the
+customer journey and improve marketing ROI.
+> - Unlock customer-centric measurement. Understand how your customers interact across your sites and apps, throughout their entire lifecycle.
+> - Get smarter insights to improve ROI. Uncover new insights and anticipate future customer actions with Google’s machine learning to get more value out of your data.
+> - Connect your insights to results. Take action to optimize marketing performance with integrations across Google’s advertising and publisher tools.
+> - Make your data work for you. Quickly analyze your data and collaborate with an easy-to-use interface and shareable reports.`
+"""
+documentation = "https://www.edgee.cloud/docs/components/data-collection/google-analytics"
+repository = "https://github.com/edgee-cloud/ga-component"
+wit-world-version = "0.4.0"
+
+[component.build]
+command = "cargo build --target wasm32-wasip2 --release && cp ./target/wasm32-wasip2/release/ga_component.wasm ga.wasm"
+output_path = "ga.wasm"
+
+[component.settings.ga-measurement-id]
+title = "Measurement ID"
+type = "string"
+required = true
+description = """
+The measurement ID for your Google Analytics property
+"""

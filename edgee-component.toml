@@ -11,8 +11,7 @@ customer journey and improve marketing ROI.
 > - Unlock customer-centric measurement. Understand how your customers interact across your sites and apps, throughout their entire lifecycle.
 > - Get smarter insights to improve ROI. Uncover new insights and anticipate future customer actions with Google’s machine learning to get more value out of your data.
 > - Connect your insights to results. Take action to optimize marketing performance with integrations across Google’s advertising and publisher tools.
-> - Make your data work for you. Quickly analyze your data and collaborate with an easy-to-use interface and shareable reports.`
-"""
+> - Make your data work for you. Quickly analyze your data and collaborate with an easy-to-use interface and shareable reports.`"""
 documentation = "https://www.edgee.cloud/docs/components/data-collection/google-analytics"
 repository = "https://github.com/edgee-cloud/ga-component"
 wit-world-version = "0.4.0"
@@ -26,5 +25,4 @@ title = "Measurement ID"
 type = "string"
 required = true
 description = """
-The measurement ID for your Google Analytics property
-"""
+The measurement ID for your Google Analytics property"""

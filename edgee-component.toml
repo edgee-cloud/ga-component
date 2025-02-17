@@ -20,7 +20,7 @@ wit-world-version = "0.4.0"
 command = "cargo build --target wasm32-wasip2 --release && cp ./target/wasm32-wasip2/release/ga_component.wasm ga.wasm"
 output_path = "ga.wasm"
 
-[component.settings.ga-measurement-id]
+[component.settings.ga_measurement_id]
 title = "Measurement ID"
 type = "string"
 required = true

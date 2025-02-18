@@ -11,6 +11,10 @@
 
 <h1 align="center">Google Analytics Component for Edgee</h1>
 
+[![Coverage Status](https://coveralls.io/repos/github/edgee-cloud/ga-component/badge.svg)](https://coveralls.io/github/edgee-cloud/ga-component)
+[![GitHub issues](https://img.shields.io/github/issues/edgee-cloud/ga-component.svg)](https://github.com/edgee-cloud/ga-component/issues)
+[![Edgee Component Registry](https://img.shields.io/badge/Edgee_Component_Registry-Public-green.svg)](https://www.edgee.cloud/edgee/google-analytics)
+
 This component enables seamless integration between [Edgee](https://www.edgee.cloud) and [Google Analytics](https://marketingplatform.google.com/about/analytics/), allowing you to collect and forward analytics data while respecting user privacy settings.
 
 ## Quick Start

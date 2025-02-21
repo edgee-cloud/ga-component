@@ -1,7 +1,7 @@
-use crate::exports::edgee::protocols::data_collection::{
+use crate::exports::edgee::components::data_collection::{
     Data, Dict, EdgeeRequest, Event, HttpMethod,
 };
-use exports::edgee::protocols::data_collection::Guest;
+use exports::edgee::components::data_collection::Guest;
 use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 mod ga_payload;
@@ -309,10 +309,10 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::exports::edgee::protocols::data_collection::{
+    use crate::exports::edgee::components::data_collection::{
         Campaign, Client, Context, EventType, PageData, Session, TrackData, UserData,
     };
-    use exports::edgee::protocols::data_collection::Consent;
+    use exports::edgee::components::data_collection::Consent;
     use pretty_assertions::assert_eq;
     use uuid::Uuid;
 

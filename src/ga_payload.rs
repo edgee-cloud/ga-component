@@ -7,7 +7,7 @@ use rand::{Rng, SeedableRng};
 use serde::Serialize;
 use std::collections::HashMap;
 
-use crate::exports::edgee::protocols::data_collection::{Consent, Dict, Event};
+use crate::exports::edgee::components::data_collection::{Consent, Dict, Event};
 
 /// from https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 #[derive(Serialize, Debug, Default)]

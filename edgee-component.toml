@@ -14,7 +14,7 @@ customer journey and improve marketing ROI.
 > - Make your data work for you. Quickly analyze your data and collaborate with an easy-to-use interface and shareable reports.`"""
 documentation = "https://www.edgee.cloud/docs/components/data-collection/google-analytics"
 repository = "https://github.com/edgee-cloud/ga-component"
-wit-world-version = "0.4.0"
+wit-world-version = "0.5.0"
 
 [component.build]
 command = "cargo build --target wasm32-wasip2 --release && cp ./target/wasm32-wasip2/release/ga_component.wasm ga.wasm"

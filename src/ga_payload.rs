@@ -135,7 +135,7 @@ pub(crate) struct GaPayload {
     event_name: String,
     /// It's the total engagement time in milliseconds since the last event. The engagement time is measured only when the current page is visible and active ( ie: the browser window/tab must be active and visible ), for this GA4 uses the window.events: focus, blur, pageshow, pagehide and the document:visibilitychange, these will determine when the timer starts and pauses. Ex: 1234
     #[serde(rename = "_et", skip_serializing_if = "Option::is_none")]
-    engagement_time: Option<String>,
+    pub engagement_time: Option<String>,
 
     // Dynamic parameter handling is more complex in Rust and might require a custom deserializer
     /// Defines a parameter for the current Event with ep.* semantic. Ex: ep.page_type: checkout

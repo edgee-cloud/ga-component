@@ -81,10 +81,12 @@ impl Guest for GaComponent {
 
             for (key, value) in data.properties.iter() {
                 let key = key.replace(" ", "_");
-                if value.parse::<f64>().is_ok() {
-                    event_parameter_number.insert(key, value.parse().unwrap());
+                if key == "engagement_time" {
+                    ga.engagement_time = Some(value.clone());
                 } else if key == "currency" {
                     ga.currency_code = Some(value.clone());
+                } else if value.parse::<f64>().is_ok() {
+                    event_parameter_number.insert(key, value.parse().unwrap());
                 } else {
                     event_parameter_string.insert(key, value.clone());
                 }

@@ -264,6 +264,10 @@ pub(crate) struct GaPayload {
     /// Currency Code. ISO 4217
     #[serde(rename = "cu", skip_serializing_if = "Option::is_none")]
     pub currency_code: Option<String>,
+
+    /// IP Override
+    #[serde(rename = "_uip", skip_serializing_if = "Option::is_none")]
+    pub ip_override: Option<String>,
 }
 
 /// Product (item). Converted into a GA4 string, it contains an item details and all it's params.
@@ -486,6 +490,11 @@ impl GaPayload {
         // geo ip
         if !edgee_event.context.client.country_code.is_empty() {
             ga.user_country = Some(edgee_event.context.client.country_code.clone());
+        }
+
+        // ip override
+        if !edgee_event.context.client.ip.is_empty() {
+            ga.ip_override = Some(edgee_event.context.client.ip.clone());
         }
 
         // Campaign are directly grabbed by GA from the URL

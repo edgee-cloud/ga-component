@@ -19,7 +19,7 @@ serde_qs = "0.13.0"
 url = "2.5.3"
 urlencoding = "2.1.3"
 uuid = { version = "1.10.0", features = ["v4"] }
-wit-bindgen = "0.34.0"
+wit-bindgen = "0.41.0"
 
 [dev-dependencies]
 cargo-llvm-cov = "0.6.15"

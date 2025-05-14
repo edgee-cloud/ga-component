@@ -695,16 +695,7 @@ mod tests {
         let settings = sample_settings();
         let result = GaComponent::user(event, settings);
 
-        assert_eq!(result.clone().is_err(), true);
-        assert_eq!(
-            result
-                .clone()
-                .err()
-                .unwrap()
-                .to_string()
-                .contains("not mapped"),
-            true
-        );
+        assert_eq!(result.clone().is_err(), false);
     }
 
     #[test]

@@ -39,10 +39,11 @@ The component maps Edgee events to Google Analytics events as follows:
 |-------------|--------------|-------------|
 | Page        | `page_view`  | Triggered when a user views a page |
 | Track       | Custom Event | Uses the provided event name directly |
-| User        | N/A         | Used for user identification only |
+| User        | `user`       | Used for user identification only |
 
 ### User Event Handling
-While User events don't generate GA events directly, they serve an important purpose:
+User events serve multiple purposes:
+- Triggers an `user` custom event call to GA4
 - Stores `user_id`, `anonymous_id`, and `properties` on the user's device
 - Enriches subsequent Page and Track events with user data
 - Enables proper user attribution across sessions

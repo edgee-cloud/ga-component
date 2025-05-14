@@ -2,7 +2,7 @@ manifest-version = 1
 
 [component]
 name = "Google Analytics"
-version = "1.0.1"
+version = "1.1.0"
 category = "data-collection"
 subcategory = "analytics"
 description = """

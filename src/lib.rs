@@ -142,8 +142,49 @@ impl Guest for GaComponent {
         }
     }
 
-    fn user(_edgee_event: Event, _settings: Dict) -> Result<EdgeeRequest, String> {
-        Err("User event is not mapped to any Google Analytics event".to_string())
+    fn user(edgee_event: Event, settings: Dict) -> Result<EdgeeRequest, String> {
+        if let Data::User(ref data) = edgee_event.data {
+            let mut ga = GaPayload::new(&edgee_event, settings, "user".to_string())
+                .map_err(|e| e.to_string())?;
+
+            // user
+            let mut user_property_string: HashMap<String, String> = HashMap::new();
+            let mut user_property_number: HashMap<String, f64> = HashMap::new();
+            if !data.anonymous_id.is_empty() {
+                ga.user_id = Some(data.anonymous_id.clone());
+            }
+            if !data.user_id.is_empty() {
+                ga.user_id = Some(data.user_id.clone());
+                if !data.anonymous_id.is_empty() {
+                    user_property_string
+                        .insert("anonymous_id".to_string(), data.anonymous_id.clone());
+                }
+            }
+
+            // user properties
+            if !data.properties.is_empty() {
+                for (key, value) in data.properties.clone().iter() {
+                    // if key has a space, replace by a _
+                    let key = key.replace(" ", "_");
+                    if value.parse::<f64>().is_ok() {
+                        user_property_number.insert(key, value.parse().unwrap());
+                    } else {
+                        user_property_string.insert(key, value.clone());
+                    }
+                }
+            }
+
+            if !user_property_string.is_empty() {
+                ga.user_property_string = Some(user_property_string);
+            }
+            if !user_property_number.is_empty() {
+                ga.user_property_number = Some(user_property_number);
+            }
+
+            Ok(build_edgee_request(ga, vec![]).map_err(|e| e.to_string())?)
+        } else {
+            Err("Missing user data".to_string())
+        }
     }
 }
 

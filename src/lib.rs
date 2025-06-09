@@ -20,7 +20,9 @@ impl Guest for GaComponent {
             let document_location = format!("{}{}", data.url.clone(), data.search.clone());
             ga.document_location = document_location;
             ga.document_title = data.title.clone();
-            ga.document_referrer = Some(data.referrer.clone());
+            if !data.referrer.clone().starts_with(&data.url) {
+                ga.document_referrer = Some(data.referrer.clone());
+            }
 
             let mut event_parameter_string = HashMap::new();
             event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());

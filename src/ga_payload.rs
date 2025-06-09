@@ -362,7 +362,15 @@ impl GaPayload {
             ga.document_location = document_location;
         }
         if !edgee_event.context.page.referrer.is_empty() {
-            ga.document_referrer = Some(edgee_event.context.page.referrer.clone());
+            // if edgee_event.context.page.referrer does not starts with edgee_event.context.page.url, set it
+            if !edgee_event
+                .context
+                .page
+                .referrer
+                .starts_with(&edgee_event.context.page.url)
+            {
+                ga.document_referrer = Some(edgee_event.context.page.referrer.clone());
+            }
         }
 
         if edgee_event.consent.is_some() && edgee_event.consent.unwrap() == Consent::Granted {

@@ -207,65 +207,65 @@ fn build_edgee_request(ga: GaPayload, ga_items: Vec<Product>) -> anyhow::Result<
             let mut item_parts = Vec::new();
 
             if let Some(sku) = &item.sku {
-                item_parts.push(format!("id{}", sku));
+                item_parts.push(format!("id{sku}"));
             }
             if let Some(name) = &item.name {
-                item_parts.push(format!("nm{}", name));
+                item_parts.push(format!("nm{name}"));
             }
             if let Some(brand) = &item.brand {
-                item_parts.push(format!("br{}", brand));
+                item_parts.push(format!("br{brand}"));
             }
             if let Some(category) = &item.category {
-                item_parts.push(format!("ca{}", category));
+                item_parts.push(format!("ca{category}"));
             }
             if let Some(price) = &item.price {
-                item_parts.push(format!("pr{}", price));
+                item_parts.push(format!("pr{price}"));
             }
             if let Some(affiliation) = &item.affiliation {
-                item_parts.push(format!("af{}", affiliation));
+                item_parts.push(format!("af{affiliation}"));
             }
             if let Some(coupon) = &item.coupon {
-                item_parts.push(format!("cp{}", coupon));
+                item_parts.push(format!("cp{coupon}"));
             }
             if let Some(discount) = &item.discount {
-                item_parts.push(format!("ds{}", discount));
+                item_parts.push(format!("ds{discount}"));
             }
             if let Some(index_val) = &item.index {
-                item_parts.push(format!("lp{}", index_val));
+                item_parts.push(format!("lp{index_val}"));
             }
             if let Some(category2) = &item.category2 {
-                item_parts.push(format!("c2{}", category2));
+                item_parts.push(format!("c2{category2}"));
             }
             if let Some(category3) = &item.category3 {
-                item_parts.push(format!("c3{}", category3));
+                item_parts.push(format!("c3{category3}"));
             }
             if let Some(category4) = &item.category4 {
-                item_parts.push(format!("c4{}", category4));
+                item_parts.push(format!("c4{category4}"));
             }
             if let Some(category5) = &item.category5 {
-                item_parts.push(format!("c5{}", category5));
+                item_parts.push(format!("c5{category5}"));
             }
             if let Some(list_id) = &item.list_id {
-                item_parts.push(format!("li{}", list_id));
+                item_parts.push(format!("li{list_id}"));
             }
             if let Some(list_name) = &item.list_name {
-                item_parts.push(format!("ln{}", list_name));
+                item_parts.push(format!("ln{list_name}"));
             }
             if let Some(variant) = &item.variant {
-                item_parts.push(format!("va{}", variant));
+                item_parts.push(format!("va{variant}"));
             }
             if let Some(location_id) = &item.location_id {
-                item_parts.push(format!("lo{}", location_id));
+                item_parts.push(format!("lo{location_id}"));
             }
             if let Some(quantity) = &item.quantity {
-                item_parts.push(format!("qt{}", quantity));
+                item_parts.push(format!("qt{quantity}"));
             }
 
             // Add custom parameters if present
             if let Some(custom_params) = &item.custom_parameters {
                 for (param_index, (key, value)) in custom_params.iter().enumerate() {
-                    item_parts.push(format!("k{}{}", param_index, key));
-                    item_parts.push(format!("v{}{}", param_index, value));
+                    item_parts.push(format!("k{param_index}{key}"));
+                    item_parts.push(format!("v{param_index}{value}"));
                 }
             }
 
@@ -276,12 +276,12 @@ fn build_edgee_request(ga: GaPayload, ga_items: Vec<Product>) -> anyhow::Result<
 
         // Add all item strings to querystring
         let items_qs = item_strings.join("");
-        querystring = format!("{}{}", querystring, items_qs);
+        querystring = format!("{querystring}{items_qs}");
     }
 
     Ok(EdgeeRequest {
         method: HttpMethod::Post,
-        url: format!("https://www.google-analytics.com/g/collect?{}", querystring),
+        url: format!("https://www.google-analytics.com/g/collect?{querystring}"),
         headers,
         forward_client_headers: true,
         body: String::new(),

@@ -397,7 +397,7 @@ impl GaPayload {
         // if edgee_id is a uuid, convert it to a 9 digit string
         let ga_client_id = if is_valid_uuid(edgee_event.context.user.edgee_id.clone().as_str()) {
             let nine_digit_id = uuid_to_nine_digit_string(&edgee_event.context.user.edgee_id)?;
-            format!("{}.{}", nine_digit_id, first_seen)
+            format!("{nine_digit_id}.{first_seen}")
         } else {
             edgee_event.context.user.edgee_id.clone()
         };
@@ -578,7 +578,7 @@ fn uuid_to_nine_digit_string(uuid: &str) -> anyhow::Result<String> {
     let result = md5::compute(uuid.as_bytes());
 
     // Convert hash result to hex string
-    let hash_hex = format!("{:x}", result);
+    let hash_hex = format!("{result:x}");
 
     // Convert hex string to a big integer
     let mut hash_bigint = BigInt::from_str_radix(&hash_hex, 16)?;
@@ -590,7 +590,7 @@ fn uuid_to_nine_digit_string(uuid: &str) -> anyhow::Result<String> {
     // if the number is not 9 digits, add leading ones
     let hash_bigint = if hash_bigint.to_string().len() < 9 {
         let leading_ones = "1".repeat(9 - hash_bigint.to_string().len());
-        format!("{}{}", leading_ones, hash_bigint)
+        format!("{leading_ones}{hash_bigint}")
     } else {
         hash_bigint.to_string()
     };

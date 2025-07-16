@@ -19,7 +19,7 @@ icon-path = "google_analytics.png"
 language = "Rust"
 
 [component.build]
-command = "cargo build --target wasm32-wasip2 --release && cp ./target/wasm32-wasip2/release/ga_component.wasm ga.wasm"
+command = "cargo build --target wasm32-wasip2 --release && rm -f ga.wasm && cp ./target/wasm32-wasip2/release/ga_component.wasm ga.wasm"
 output_path = "ga.wasm"
 
 [component.settings.ga_measurement_id]

@@ -6,12 +6,42 @@ version = "1.1.1"
 category = "data-collection"
 subcategory = "analytics"
 description = """
-Get a complete understanding of your customers across devices and platforms. Google Analytics gives you the tools, free of charge, to understand the
-customer journey and improve marketing ROI.
-> - Unlock customer-centric measurement. Understand how your customers interact across your sites and apps, throughout their entire lifecycle.
-> - Get smarter insights to improve ROI. Uncover new insights and anticipate future customer actions with Google’s machine learning to get more value out of your data.
-> - Connect your insights to results. Take action to optimize marketing performance with integrations across Google’s advertising and publisher tools.
-> - Make your data work for you. Quickly analyze your data and collaborate with an easy-to-use interface and shareable reports.`"""
+## Overview
+
+The **Google Analytics** component by Edgee enables seamless integration of Google Analytics 4 (GA4) into your application at the edge.
+By deploying this component, you can collect and forward analytics data while respecting user privacy settings, eliminating the need to load the GA4 script on your website.
+
+---
+
+## Key Features & Benefits
+
+### Features
+
+- **Edge Deployment**: Run analytics at the edge for improved performance and reduced latency.
+- **Privacy Compliance**: Respect user consent preferences by managing data collection at the edge.
+- **E-commerce Support**: Track standard GA4 e-commerce events such as `view_item`, `add_to_cart`, and `purchase`.
+- **Data Layer Integration**: Easily integrate with the Edgee Data Layer to capture events.
+- **Custom Parameters**: Define product-scoped custom parameters for enhanced tracking.
+
+### Benefits
+
+- **Enhanced Performance**: Reduce client-side load by processing analytics at the edge.
+- **Improved Privacy**: Ensure compliance with data protection regulations by managing data collection at the edge.
+- **Seamless Integration**: Easily integrate with existing Edgee projects and workflows.
+- **Comprehensive Tracking**: Capture a wide range of user interactions and e-commerce events.
+
+---
+
+## Use Cases
+
+- **E-commerce Platforms**: Track user interactions and optimize conversion funnels.
+- **Media & Publishing**: Analyze audience engagement and content performance.
+- **Financial Services**: Monitor user journeys and personalize offerings.
+
+---
+
+Additional resources: [Google Analytics Documentation](https://support.google.com/analytics)
+"""
 documentation = "https://www.edgee.cloud/docs/components/data-collection/google-analytics"
 repository = "https://github.com/edgee-cloud/ga-component"
 wit-version = "1.0.0"

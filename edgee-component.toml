@@ -6,10 +6,6 @@ version = "1.1.1"
 category = "data-collection"
 subcategory = "analytics"
 description = """
-# Google Analytics Component
-
-[https://www.edgee.cloud/edgee/google-analytics](https://www.edgee.cloud/edgee/google-analytics)
-
 ## Overview
 
 The **Google Analytics** component by Edgee enables seamless integration of Google Analytics 4 (GA4) into your application at the edge.

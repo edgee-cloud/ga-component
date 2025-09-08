@@ -2,7 +2,7 @@ manifest-version = 1
 
 [component]
 name = "Google Analytics"
-version = "1.1.1"
+version = "1.2.0"
 category = "data-collection"
 subcategory = "analytics"
 description = """
@@ -19,6 +19,7 @@ By deploying this component, you can collect and forward analytics data while re
 
 - **Edge Deployment**: Run analytics at the edge for improved performance and reduced latency.
 - **Privacy Compliance**: Respect user consent preferences by managing data collection at the edge.
+- **Configurable Consent Mapping**: Customize how Edgee consent states map to Google Analytics consent mode parameters.
 - **E-commerce Support**: Track standard GA4 e-commerce events such as `view_item`, `add_to_cart`, and `purchase`.
 - **Data Layer Integration**: Easily integrate with the Edgee Data Layer to capture events.
 - **Custom Parameters**: Define product-scoped custom parameters for enhanced tracking.
@@ -58,3 +59,27 @@ type = "string"
 required = true
 description = """
 The measurement ID for your Google Analytics property"""
+
+[component.settings.consent_mapping_pending]
+title = "GA4 Consent Mode Mapping - Pending"
+type = "string"
+required = false
+options = ["analytics_only", "full_consent", "no_consent"]
+description = """
+How to map Edgee 'pending' consent to Google Analytics consent mode. Default is 'analytics_only'."""
+
+[component.settings.consent_mapping_denied]
+title = "GA4 Consent Mode Mapping - Denied"
+type = "string"
+required = false
+options = ["analytics_only", "full_consent", "no_consent"]
+description = """
+How to map Edgee 'denied' consent to Google Analytics consent mode. Default is 'no_consent'."""
+
+[component.settings.consent_mapping_granted]
+title = "GA4 Consent Mode Mapping - Granted"
+type = "string"
+required = false
+options = ["analytics_only", "full_consent", "no_consent"]
+description = """
+How to map Edgee 'granted' consent to Google Analytics consent mode. Default is 'full_consent'."""

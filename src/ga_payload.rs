@@ -9,6 +9,54 @@ use std::collections::HashMap;
 
 use crate::exports::edgee::components::data_collection::{Consent, Dict, Event};
 
+#[derive(Debug, Clone, PartialEq)]
+pub enum ConsentMapping {
+    AnalyticsOnly,
+    FullConsent,
+    NoConsent,
+}
+
+impl ConsentMapping {
+    pub fn from_str(s: &str) -> Self {
+        match s.to_lowercase().as_str() {
+            "analytics_only" => ConsentMapping::AnalyticsOnly,
+            "full_consent" => ConsentMapping::FullConsent,
+            "no_consent" => ConsentMapping::NoConsent,
+            _ => ConsentMapping::AnalyticsOnly, // Default fallback
+        }
+    }
+
+    /// Apply consent mapping to GA payload
+    pub fn apply_to_ga_payload(&self, ga: &mut GaPayload) {
+        match self {
+            ConsentMapping::FullConsent => {
+                ga.google_consent_status = Some("G111".to_string());
+                ga.gcd = Some("13t3t3t2t5l1".to_string());
+                ga.npa = Some("0".to_string());
+                ga.dma_cps = Some("syphamo".to_string());
+                ga.dma = Some("1".to_string());
+                ga.pscdl = Some("noapi".to_string());
+            }
+            ConsentMapping::AnalyticsOnly => {
+                ga.google_consent_status = Some("G101".to_string());
+                ga.gcd = Some("13p3t3p2p5l1".to_string());
+                ga.npa = Some("1".to_string());
+                ga.dma_cps = Some("-".to_string());
+                ga.dma = Some("1".to_string());
+                ga.pscdl = Some("denied".to_string());
+            }
+            ConsentMapping::NoConsent => {
+                ga.google_consent_status = Some("G100".to_string());
+                ga.gcd = Some("13p3p3p2p5l1".to_string());
+                ga.npa = Some("1".to_string());
+                ga.dma_cps = Some("-".to_string());
+                ga.dma = Some("1".to_string());
+                ga.pscdl = Some("denied".to_string());
+            }
+        }
+    }
+}
+
 /// from https://www.thyngster.com/ga4-measurement-protocol-cheatsheet/
 #[derive(Serialize, Debug, Default)]
 pub(crate) struct GaPayload {
@@ -373,23 +421,9 @@ impl GaPayload {
             }
         }
 
-        if edgee_event.consent.is_some() && edgee_event.consent.unwrap() == Consent::Granted {
-            // Consent is fully granted
-            ga.google_consent_status = Some("G111".to_string());
-            ga.gcd = Some("13t3t3t2t5l1".to_string());
-            ga.npa = Some("0".to_string());
-            ga.dma_cps = Some("syphamo".to_string());
-            ga.dma = Some("1".to_string());
-            ga.pscdl = Some("noapi".to_string());
-        } else {
-            // Consent is set to analytics only
-            ga.google_consent_status = Some("G101".to_string());
-            ga.gcd = Some("13p3t3p2p5l1".to_string());
-            ga.npa = Some("1".to_string());
-            ga.dma_cps = Some("-".to_string());
-            ga.dma = Some("1".to_string());
-            ga.pscdl = Some("denied".to_string());
-        }
+        // Apply configurable consent mapping
+        let consent_mapping = get_consent_mapping(&edgee_event.consent, &cred);
+        consent_mapping.apply_to_ga_payload(&mut ga);
 
         // forge the typical ga ClientId
         let first_seen = edgee_event.context.session.first_seen;
@@ -606,6 +640,28 @@ fn is_valid_uuid(uuid_str: &str) -> bool {
     }
 }
 
+/// Get consent mapping based on Edgee consent and component settings
+fn get_consent_mapping(edgee_consent: &Option<Consent>, settings: &HashMap<String, String>) -> ConsentMapping {
+    let consent_key = match edgee_consent {
+        Some(Consent::Pending) => "consent_mapping_pending",
+        Some(Consent::Denied) => "consent_mapping_denied", 
+        Some(Consent::Granted) => "consent_mapping_granted",
+        None => "consent_mapping_pending", // Default to pending when no consent
+    };
+
+    let mapping_value = settings.get(consent_key)
+        .map(|s| s.as_str())
+        .unwrap_or_else(|| {
+            // Default fallbacks
+            match edgee_consent {
+                Some(Consent::Granted) => "full_consent",
+                _ => "analytics_only",
+            }
+        });
+
+    ConsentMapping::from_str(mapping_value)
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -676,5 +732,79 @@ mod tests {
         let result = random_page_load_hash();
         let number: i64 = result.parse().unwrap();
         assert!((0..=2147483647).contains(&number));
+    }
+
+    #[test]
+    fn consent_mapping_from_str() {
+        assert_eq!(ConsentMapping::from_str("analytics_only"), ConsentMapping::AnalyticsOnly);
+        assert_eq!(ConsentMapping::from_str("full_consent"), ConsentMapping::FullConsent);
+        assert_eq!(ConsentMapping::from_str("no_consent"), ConsentMapping::NoConsent);
+        assert_eq!(ConsentMapping::from_str("ANALYTICS_ONLY"), ConsentMapping::AnalyticsOnly);
+        assert_eq!(ConsentMapping::from_str("invalid"), ConsentMapping::AnalyticsOnly);
+    }
+
+    #[test]
+    fn consent_mapping_analytics_only() {
+        let mut ga = GaPayload::default();
+        ConsentMapping::AnalyticsOnly.apply_to_ga_payload(&mut ga);
+        
+        assert_eq!(ga.google_consent_status, Some("G101".to_string()));
+        assert_eq!(ga.gcd, Some("13p3t3p2p5l1".to_string()));
+        assert_eq!(ga.npa, Some("1".to_string()));
+        assert_eq!(ga.dma_cps, Some("-".to_string()));
+        assert_eq!(ga.dma, Some("1".to_string()));
+        assert_eq!(ga.pscdl, Some("denied".to_string()));
+    }
+
+    #[test]
+    fn consent_mapping_full_consent() {
+        let mut ga = GaPayload::default();
+        ConsentMapping::FullConsent.apply_to_ga_payload(&mut ga);
+        
+        assert_eq!(ga.google_consent_status, Some("G111".to_string()));
+        assert_eq!(ga.gcd, Some("13t3t3t2t5l1".to_string()));
+        assert_eq!(ga.npa, Some("0".to_string()));
+        assert_eq!(ga.dma_cps, Some("syphamo".to_string()));
+        assert_eq!(ga.dma, Some("1".to_string()));
+        assert_eq!(ga.pscdl, Some("noapi".to_string()));
+    }
+
+    #[test]
+    fn consent_mapping_no_consent() {
+        let mut ga = GaPayload::default();
+        ConsentMapping::NoConsent.apply_to_ga_payload(&mut ga);
+        
+        assert_eq!(ga.google_consent_status, Some("G000".to_string()));
+        assert_eq!(ga.gcd, Some("13p3p3p2p5l1".to_string()));
+        assert_eq!(ga.npa, Some("1".to_string()));
+        assert_eq!(ga.dma_cps, Some("-".to_string()));
+        assert_eq!(ga.dma, Some("1".to_string()));
+        assert_eq!(ga.pscdl, Some("denied".to_string()));
+    }
+
+    #[test]
+    fn get_consent_mapping_with_settings() {
+        use crate::exports::edgee::components::data_collection::Consent;
+        
+        let mut settings = HashMap::new();
+        settings.insert("consent_mapping_pending".to_string(), "full_consent".to_string());
+        settings.insert("consent_mapping_denied".to_string(), "no_consent".to_string());
+        settings.insert("consent_mapping_granted".to_string(), "full_consent".to_string());
+
+        assert_eq!(get_consent_mapping(&Some(Consent::Pending), &settings), ConsentMapping::FullConsent);
+        assert_eq!(get_consent_mapping(&Some(Consent::Denied), &settings), ConsentMapping::NoConsent);
+        assert_eq!(get_consent_mapping(&Some(Consent::Granted), &settings), ConsentMapping::FullConsent);
+    }
+
+    #[test]
+    fn get_consent_mapping_without_settings() {
+        use crate::exports::edgee::components::data_collection::Consent;
+        
+        let settings = HashMap::new();
+
+        assert_eq!(get_consent_mapping(&Some(Consent::Pending), &settings), ConsentMapping::AnalyticsOnly);
+        assert_eq!(get_consent_mapping(&Some(Consent::Denied), &settings), ConsentMapping::AnalyticsOnly);
+        assert_eq!(get_consent_mapping(&Some(Consent::Granted), &settings), ConsentMapping::FullConsent);
+        assert_eq!(get_consent_mapping(&None, &settings), ConsentMapping::AnalyticsOnly);
     }
 }

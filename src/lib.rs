@@ -1,7 +1,7 @@
 use crate::exports::edgee::components::data_collection::{
     Data, Dict, EdgeeRequest, Event, HttpMethod,
 };
-use exports::edgee::components::data_collection::Guest;
+use exports::edgee::components::data_collection::{Consent, Guest};
 use ga_payload::{GaPayload, Product};
 use std::collections::HashMap;
 mod ga_payload;
@@ -45,6 +45,14 @@ impl Guest for GaComponent {
                 event_parameter_string.insert("page_search".to_string(), data.search.clone());
             }
 
+            let consent = match edgee_event.consent {
+                Some(Consent::Granted) => "granted",
+                Some(Consent::Denied) => "denied",
+                Some(Consent::Pending) => "pending",
+                _ => "",
+            };
+            event_parameter_string.insert("edgee_consent".to_string(), consent.to_string());
+
             for (key, value) in data.properties.iter() {
                 let key = key.replace(" ", "_");
                 if value.parse::<f64>().is_ok() {
@@ -78,6 +86,14 @@ impl Guest for GaComponent {
 
             let mut event_parameter_string = HashMap::new();
             event_parameter_string.insert("event_id".to_string(), edgee_event.uuid.clone());
+
+            let consent = match edgee_event.consent {
+                Some(Consent::Granted) => "granted",
+                Some(Consent::Denied) => "denied",
+                Some(Consent::Pending) => "pending",
+                _ => "",
+            };
+            event_parameter_string.insert("edgee_consent".to_string(), consent.to_string());
 
             let mut event_parameter_number = HashMap::new();
 
@@ -715,6 +731,50 @@ mod tests {
         let result = GaComponent::track(event, settings);
         //println!("Error: {}", result.clone().err().unwrap().to_string().as_str());
         assert_eq!(result.clone().is_err(), false);
+    }
+
+    #[test]
+    fn page_with_custom_consent_mapping() {
+        let event = sample_page_event(
+            Some(Consent::Denied),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        
+        // Test custom consent mapping: denied -> no_consent
+        let mut settings = sample_settings();
+        settings.push(("consent_mapping_denied".to_string(), "no_consent".to_string()));
+        
+        let result = GaComponent::page(event, settings);
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        
+        // Verify the URL contains the no_consent mapping parameters
+        assert!(edgee_request.url.contains("gcs=G000")); // No consent
+        assert!(edgee_request.url.contains("gcd=13p3p3p2p5l1")); // No consent GCD
+    }
+
+    #[test]
+    fn page_with_analytics_only_mapping() {
+        let event = sample_page_event(
+            Some(Consent::Pending),
+            "abc".to_string(),
+            "fr".to_string(),
+            true,
+        );
+        
+        // Test analytics only mapping for pending consent
+        let mut settings = sample_settings();
+        settings.push(("consent_mapping_pending".to_string(), "analytics_only".to_string()));
+        
+        let result = GaComponent::page(event, settings);
+        assert_eq!(result.is_err(), false);
+        let edgee_request = result.unwrap();
+        
+        // Verify the URL contains analytics only parameters
+        assert!(edgee_request.url.contains("gcs=G101")); // Analytics only
+        assert!(edgee_request.url.contains("gcd=13p3t3p2p5l1")); // Analytics only GCD
     }
 
     /*

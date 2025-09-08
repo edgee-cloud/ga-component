@@ -751,7 +751,7 @@ mod tests {
         let edgee_request = result.unwrap();
         
         // Verify the URL contains the no_consent mapping parameters
-        assert!(edgee_request.url.contains("gcs=G000")); // No consent
+        assert!(edgee_request.url.contains("gcs=G100")); // No consent
         assert!(edgee_request.url.contains("gcd=13p3p3p2p5l1")); // No consent GCD
     }
 

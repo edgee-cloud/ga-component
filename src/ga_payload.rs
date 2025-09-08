@@ -641,15 +641,19 @@ fn is_valid_uuid(uuid_str: &str) -> bool {
 }
 
 /// Get consent mapping based on Edgee consent and component settings
-fn get_consent_mapping(edgee_consent: &Option<Consent>, settings: &HashMap<String, String>) -> ConsentMapping {
+fn get_consent_mapping(
+    edgee_consent: &Option<Consent>,
+    settings: &HashMap<String, String>,
+) -> ConsentMapping {
     let consent_key = match edgee_consent {
         Some(Consent::Pending) => "consent_mapping_pending",
-        Some(Consent::Denied) => "consent_mapping_denied", 
+        Some(Consent::Denied) => "consent_mapping_denied",
         Some(Consent::Granted) => "consent_mapping_granted",
         None => "consent_mapping_pending", // Default to pending when no consent
     };
 
-    let mapping_value = settings.get(consent_key)
+    let mapping_value = settings
+        .get(consent_key)
         .map(|s| s.as_str())
         .unwrap_or_else(|| {
             // Default fallbacks
@@ -736,18 +740,33 @@ mod tests {
 
     #[test]
     fn consent_mapping_from_str() {
-        assert_eq!(ConsentMapping::from_str("analytics_only"), ConsentMapping::AnalyticsOnly);
-        assert_eq!(ConsentMapping::from_str("full_consent"), ConsentMapping::FullConsent);
-        assert_eq!(ConsentMapping::from_str("no_consent"), ConsentMapping::NoConsent);
-        assert_eq!(ConsentMapping::from_str("ANALYTICS_ONLY"), ConsentMapping::AnalyticsOnly);
-        assert_eq!(ConsentMapping::from_str("invalid"), ConsentMapping::AnalyticsOnly);
+        assert_eq!(
+            ConsentMapping::from_str("analytics_only"),
+            ConsentMapping::AnalyticsOnly
+        );
+        assert_eq!(
+            ConsentMapping::from_str("full_consent"),
+            ConsentMapping::FullConsent
+        );
+        assert_eq!(
+            ConsentMapping::from_str("no_consent"),
+            ConsentMapping::NoConsent
+        );
+        assert_eq!(
+            ConsentMapping::from_str("ANALYTICS_ONLY"),
+            ConsentMapping::AnalyticsOnly
+        );
+        assert_eq!(
+            ConsentMapping::from_str("invalid"),
+            ConsentMapping::AnalyticsOnly
+        );
     }
 
     #[test]
     fn consent_mapping_analytics_only() {
         let mut ga = GaPayload::default();
         ConsentMapping::AnalyticsOnly.apply_to_ga_payload(&mut ga);
-        
+
         assert_eq!(ga.google_consent_status, Some("G101".to_string()));
         assert_eq!(ga.gcd, Some("13p3t3p2p5l1".to_string()));
         assert_eq!(ga.npa, Some("1".to_string()));
@@ -760,7 +779,7 @@ mod tests {
     fn consent_mapping_full_consent() {
         let mut ga = GaPayload::default();
         ConsentMapping::FullConsent.apply_to_ga_payload(&mut ga);
-        
+
         assert_eq!(ga.google_consent_status, Some("G111".to_string()));
         assert_eq!(ga.gcd, Some("13t3t3t2t5l1".to_string()));
         assert_eq!(ga.npa, Some("0".to_string()));
@@ -773,7 +792,7 @@ mod tests {
     fn consent_mapping_no_consent() {
         let mut ga = GaPayload::default();
         ConsentMapping::NoConsent.apply_to_ga_payload(&mut ga);
-        
+
         assert_eq!(ga.google_consent_status, Some("G100".to_string()));
         assert_eq!(ga.gcd, Some("13p3p3p2p5l1".to_string()));
         assert_eq!(ga.npa, Some("1".to_string()));
@@ -785,26 +804,56 @@ mod tests {
     #[test]
     fn get_consent_mapping_with_settings() {
         use crate::exports::edgee::components::data_collection::Consent;
-        
-        let mut settings = HashMap::new();
-        settings.insert("consent_mapping_pending".to_string(), "full_consent".to_string());
-        settings.insert("consent_mapping_denied".to_string(), "no_consent".to_string());
-        settings.insert("consent_mapping_granted".to_string(), "full_consent".to_string());
 
-        assert_eq!(get_consent_mapping(&Some(Consent::Pending), &settings), ConsentMapping::FullConsent);
-        assert_eq!(get_consent_mapping(&Some(Consent::Denied), &settings), ConsentMapping::NoConsent);
-        assert_eq!(get_consent_mapping(&Some(Consent::Granted), &settings), ConsentMapping::FullConsent);
+        let mut settings = HashMap::new();
+        settings.insert(
+            "consent_mapping_pending".to_string(),
+            "full_consent".to_string(),
+        );
+        settings.insert(
+            "consent_mapping_denied".to_string(),
+            "no_consent".to_string(),
+        );
+        settings.insert(
+            "consent_mapping_granted".to_string(),
+            "full_consent".to_string(),
+        );
+
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Pending), &settings),
+            ConsentMapping::FullConsent
+        );
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Denied), &settings),
+            ConsentMapping::NoConsent
+        );
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Granted), &settings),
+            ConsentMapping::FullConsent
+        );
     }
 
     #[test]
     fn get_consent_mapping_without_settings() {
         use crate::exports::edgee::components::data_collection::Consent;
-        
+
         let settings = HashMap::new();
 
-        assert_eq!(get_consent_mapping(&Some(Consent::Pending), &settings), ConsentMapping::AnalyticsOnly);
-        assert_eq!(get_consent_mapping(&Some(Consent::Denied), &settings), ConsentMapping::AnalyticsOnly);
-        assert_eq!(get_consent_mapping(&Some(Consent::Granted), &settings), ConsentMapping::FullConsent);
-        assert_eq!(get_consent_mapping(&None, &settings), ConsentMapping::AnalyticsOnly);
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Pending), &settings),
+            ConsentMapping::AnalyticsOnly
+        );
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Denied), &settings),
+            ConsentMapping::AnalyticsOnly
+        );
+        assert_eq!(
+            get_consent_mapping(&Some(Consent::Granted), &settings),
+            ConsentMapping::FullConsent
+        );
+        assert_eq!(
+            get_consent_mapping(&None, &settings),
+            ConsentMapping::AnalyticsOnly
+        );
     }
 }

@@ -741,15 +741,18 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        
+
         // Test custom consent mapping: denied -> no_consent
         let mut settings = sample_settings();
-        settings.push(("consent_mapping_denied".to_string(), "no_consent".to_string()));
-        
+        settings.push((
+            "consent_mapping_denied".to_string(),
+            "no_consent".to_string(),
+        ));
+
         let result = GaComponent::page(event, settings);
         assert_eq!(result.is_err(), false);
         let edgee_request = result.unwrap();
-        
+
         // Verify the URL contains the no_consent mapping parameters
         assert!(edgee_request.url.contains("gcs=G100")); // No consent
         assert!(edgee_request.url.contains("gcd=13p3p3p2p5l1")); // No consent GCD
@@ -763,15 +766,18 @@ mod tests {
             "fr".to_string(),
             true,
         );
-        
+
         // Test analytics only mapping for pending consent
         let mut settings = sample_settings();
-        settings.push(("consent_mapping_pending".to_string(), "analytics_only".to_string()));
-        
+        settings.push((
+            "consent_mapping_pending".to_string(),
+            "analytics_only".to_string(),
+        ));
+
         let result = GaComponent::page(event, settings);
         assert_eq!(result.is_err(), false);
         let edgee_request = result.unwrap();
-        
+
         // Verify the URL contains analytics only parameters
         assert!(edgee_request.url.contains("gcs=G101")); // Analytics only
         assert!(edgee_request.url.contains("gcd=13p3t3p2p5l1")); // Analytics only GCD

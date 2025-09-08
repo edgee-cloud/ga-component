@@ -774,7 +774,7 @@ mod tests {
         let mut ga = GaPayload::default();
         ConsentMapping::NoConsent.apply_to_ga_payload(&mut ga);
         
-        assert_eq!(ga.google_consent_status, Some("G000".to_string()));
+        assert_eq!(ga.google_consent_status, Some("G100".to_string()));
         assert_eq!(ga.gcd, Some("13p3p3p2p5l1".to_string()));
         assert_eq!(ga.npa, Some("1".to_string()));
         assert_eq!(ga.dma_cps, Some("-".to_string()));

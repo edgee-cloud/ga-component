@@ -402,12 +402,7 @@ impl GaPayload {
             ga.document_title = edgee_event.context.page.title.clone();
         }
         if !edgee_event.context.page.url.is_empty() {
-            let document_location = format!(
-                "{}{}",
-                edgee_event.context.page.url.clone(),
-                edgee_event.context.page.search.clone()
-            );
-            ga.document_location = document_location;
+            ga.document_location = edgee_event.context.page.url.clone();
         }
         if !edgee_event.context.page.referrer.is_empty() {
             // if edgee_event.context.page.referrer does not starts with edgee_event.context.page.url, set it

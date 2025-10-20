@@ -17,8 +17,7 @@ impl Guest for GaComponent {
             let mut ga = GaPayload::new(&edgee_event, settings, "page_view".to_string())
                 .map_err(|e| e.to_string())?;
 
-            let document_location = format!("{}{}", data.url.clone(), data.search.clone());
-            ga.document_location = document_location;
+            ga.document_location = data.url.clone();
             ga.document_title = data.title.clone();
             if !data.referrer.clone().starts_with(&data.url) {
                 ga.document_referrer = Some(data.referrer.clone());

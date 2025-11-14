@@ -17,7 +17,7 @@ impl Guest for GaComponent {
             let mut ga = GaPayload::new(&edgee_event, settings, "page_view".to_string())
                 .map_err(|e| e.to_string())?;
 
-            ga.document_location = data.url.clone();
+            ga.document_location = build_full_url(&data.url, &data.search);
             ga.document_title = data.title.clone();
             if !data.referrer.clone().starts_with(&data.url) {
                 ga.document_referrer = Some(data.referrer.clone());
@@ -364,6 +364,19 @@ fn cleanup_querystring(ga4_qs: &str) -> anyhow::Result<String> {
     }
 
     Ok(cleaned_qs)
+}
+
+// Build full URL from base URL and query string
+fn build_full_url(base_url: &str, qs: &str) -> String {
+    // Strip leading '?' from querystring if present
+    let qs = qs.strip_prefix('?').unwrap_or(qs);
+
+    // Check if base_url already contains a '?'
+    if base_url.contains('?') {
+        format!("{}&{}", base_url, qs)
+    } else {
+        format!("{}?{}", base_url, qs)
+    }
 }
 
 #[cfg(test)]

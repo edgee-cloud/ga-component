@@ -402,12 +402,10 @@ impl GaPayload {
             ga.document_title = edgee_event.context.page.title.clone();
         }
         if !edgee_event.context.page.url.is_empty() {
-            let full_url = format!(
-                "{}{}",
-                edgee_event.context.page.url, edgee_event.context.page.search,
+            ga.document_location = super::build_full_url(
+                &edgee_event.context.page.url,
+                &edgee_event.context.page.search,
             );
-
-            ga.document_location = full_url;
         }
         if !edgee_event.context.page.referrer.is_empty() {
             // if edgee_event.context.page.referrer does not starts with edgee_event.context.page.url, set it
